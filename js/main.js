@@ -26,6 +26,8 @@ function buildGrid(width, height) {
             }
         },
         findDistancesFrom(x, y) {
+            this.forEachCell(cell => delete cell.metadata.distance);
+            delete this.metadata.maxDistance;
             const startCell = this.getCell(x, y);
             startCell.metadata.distance = 0;
             const frontier = [startCell];
@@ -120,11 +122,11 @@ function generateMaze(grid) {
     return generateMazeSidewinder(grid);
 }
 
+const MAGNIFICATION = 20;
 function render(maze) {
     "use strict";
     const elCanvas = document.getElementById('maze'),
         ctx = elCanvas.getContext('2d'),
-        MAGNIFICATION = 15,
         WALL_THICKNESS = 1;
 
     function drawWall(x0, y0, x1, y1) {
@@ -167,10 +169,21 @@ function render(maze) {
 
 window.onload = () => {
     "use strict";
-    const grid = buildGrid(30,30),
+    const grid = buildGrid(20,20),
         maze = generateMaze(grid);
 
-    maze.findDistancesFrom(0,0);
+    //maze.findDistancesFrom(0,0);
     render(maze);
-    console.log(maze.cells)
+
+    const elCanvas = document.getElementById('maze'),
+        rect = elCanvas.getBoundingClientRect();
+
+    elCanvas.onmousemove = e => {
+        const x = Math.floor((e.clientX  - rect.left) / MAGNIFICATION),
+            y = Math.floor((e.clientY - rect.top) / MAGNIFICATION);
+        if (maze.getCell(x,y)){
+            maze.findDistancesFrom(x,y);
+            render(maze);
+        }
+    };
 };
