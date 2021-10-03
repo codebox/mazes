@@ -1,7 +1,12 @@
+function randomInt(num) {
+    "use strict";
+    return Math.floor(Math.random() * num);
+}
+
 function randomChoice(arr) {
     "use strict";
     console.assert(arr.length);
-    return arr[Math.floor(Math.random() * arr.length)];
+    return arr[randomInt(arr.length)];
 }
 
 function buildGrid(width, height) {
@@ -122,7 +127,7 @@ function generateMazeSidewinder(grid) {
                 neighbour.neighbours.west.link = true;
 
             } else if (!cell.southEdge) {
-                const randomCellFromRun = grid.getCell(x - Math.floor(Math.random() * runLength), y);
+                const randomCellFromRun = grid.getCell(x - randomInt(runLength), y);
                 const neighbour = randomCellFromRun.neighbours.south.cell;
                 randomCellFromRun.neighbours.south.link = true;
                 console.assert(neighbour.neighbours.north.cell === randomCellFromRun && neighbour.neighbours.north.link === false);
@@ -136,8 +141,8 @@ function generateMazeSidewinder(grid) {
 }
 
 function generateMazeAldousBroder(grid) {
-    const startX = Math.floor(Math.random() * grid.width),
-        startY = Math.floor(Math.random() * grid.height);
+    const startX = randomInt(grid.width),
+        startY = randomInt(grid.height);
 
     let unvisitedCount = grid.width * grid.height,
         currentCell;
@@ -156,10 +161,74 @@ function generateMazeAldousBroder(grid) {
         currentCell = nextCell;
     }
 
-    moveTo(grid.getCell(startY, startY));
+    moveTo(grid.getCell(startX, startY));
     while (unvisitedCount) {
         moveTo(currentCell.randomNeighbour());
     }
+    return grid;
+}
+
+function generateMazeWilson(grid) {
+    "use strict";
+    grid.clearMetadata();
+
+    function markVisited(cell) {
+        cell.metadata.visited = true;
+    }
+    function filterCells(fnCriteria) {
+        const matchingCells = [];
+        grid.forEachCell(cell => {
+            if (fnCriteria(cell)) {
+                matchingCells.push(cell);
+            }
+        });
+        return matchingCells;
+    }
+    function getRandomCell(fnCritera) {
+        return randomChoice(filterCells(fnCritera));
+    }
+    function countCells(fnCriteria) {
+        return filterCells(fnCriteria).length;
+    }
+
+    function removeLoops(cells) {
+        const latestCell = cells[cells.length - 1],
+            indexOfPreviousVisit = cells.findIndex(cell => cell === latestCell);
+        if (indexOfPreviousVisit >= 0) {
+            cells.splice(indexOfPreviousVisit + 1);
+        }
+    }
+
+    markVisited(grid.getCell(randomInt(grid.width), randomInt(grid.height)));
+
+    while (true) {
+        let currentCell = getRandomCell(cell => !cell.metadata.visited),
+            currentPath = [currentCell];
+        while (true) {
+            const nextCell = currentCell.randomNeighbour();
+            currentPath.push(nextCell);
+
+            if (nextCell.metadata.visited) {
+                for (let i=0; i<currentPath.length-1; i++) {
+                    const thisCell = currentPath[i],
+                        nextCell = currentPath[i+1];
+                    thisCell.linkTo(nextCell);
+                }
+                currentPath.forEach(cell => cell.metadata.visited = true);
+                break;
+
+            } else {
+                removeLoops(currentPath);
+                currentCell = nextCell;
+            }
+        }
+
+        const unvisitedCount = countCells(cell => !cell.metadata.visited);
+        if (!unvisitedCount) {
+            break;
+        }
+    }
+
     return grid;
 }
 
@@ -167,7 +236,8 @@ function generateMaze(grid) {
     "use strict";
     // return generateMazeBinaryTree(grid);
     //  return generateMazeSidewinder(grid);
-    return generateMazeAldousBroder(grid);
+    // return generateMazeAldousBroder(grid);
+    return generateMazeWilson(grid);
 }
 
 const MAGNIFICATION = 20;
