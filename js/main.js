@@ -251,7 +251,6 @@ function generateMazeHuntAndKill(grid) {
 
     function markVisited(cell) {
         cell.metadata.visited = true;
-        console.log(cell.x, cell.y)
     }
 
     markVisited(currentCell);
@@ -262,7 +261,6 @@ function generateMazeHuntAndKill(grid) {
             currentCell.linkTo(nextCell);
             currentCell = nextCell;
         } else {
-            console.log('no unvisited')
             const newStartCell = grid.getRandomCell(cell => !cell.metadata.visited && cell.filterNeighbours(cell => cell.metadata.visited).length);
             if (newStartCell) {
                 const visitedNeighbour = newStartCell.randomNeighbour(cell => cell.metadata.visited);
@@ -278,13 +276,52 @@ function generateMazeHuntAndKill(grid) {
     return grid;
 }
 
+function generateRecursiveBacktrack(grid){
+    "use strict";
+    grid.clearMetadata();
+
+    const stack = [];
+    let currentCell;
+
+    function visitCell(nextCell) {
+        const previousCell = currentCell;
+        currentCell = nextCell;
+        currentCell.metadata.visited = true;
+        if (previousCell) {
+            currentCell.linkTo(previousCell);
+        }
+        stack.push(currentCell);
+    }
+
+    visitCell(grid.getRandomCell());
+
+    while (stack.length) {
+        const nextCell = currentCell.randomNeighbour(cell => !cell.metadata.visited);
+        if (nextCell) {
+            visitCell(nextCell);
+
+        } else {
+            while (!currentCell.filterNeighbours(cell => !cell.metadata.visited).length) {
+                stack.pop();
+                if (!stack.length) {
+                    break;
+                }
+                currentCell = stack[stack.length - 1];
+            }
+        }
+    }
+
+    return grid;
+}
+
 function generateMaze(grid) {
     "use strict";
     // return generateMazeBinaryTree(grid);
     // return generateMazeSidewinder(grid);
     // return generateMazeAldousBroder(grid);
     // return generateMazeWilson(grid);
-    return generateMazeHuntAndKill(grid);
+    // return generateMazeHuntAndKill(grid);
+    return generateRecursiveBacktrack(grid);
 }
 
 const MAGNIFICATION = 20;
