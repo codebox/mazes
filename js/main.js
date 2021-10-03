@@ -12,6 +12,10 @@ function randomChoice(arr) {
 
 function buildGrid(width, height) {
     "use strict";
+    function findNeighbourFromCell(thisCell, neighbourCell) {
+        return Object.values(thisCell.neighbours).find(neighbour => neighbour.cell === neighbourCell);
+    }
+
     const cells = [...Array(height)].map((row, y) => [...Array(width)].map((_, x) => {
         return {
             neighbours: {},
@@ -20,6 +24,7 @@ function buildGrid(width, height) {
             southEdge: y === height - 1,
             eastEdge: x === width - 1,
             westEdge: x === 0,
+            masked: false,
             filterNeighbours(fnCriteria = () => true) {
                 return Object.values(this.neighbours).filter(neighbour => neighbour.cell).filter(neighbour => fnCriteria(neighbour.cell, neighbour.link)).map(neighbour => neighbour.cell);
             },
@@ -30,12 +35,18 @@ function buildGrid(width, height) {
                 }
             },
             linkTo(other) {
-                function findNeighbourFromCell(thisCell, neighbourCell) {
-                    return Object.values(thisCell.neighbours).find(neighbour => neighbour.cell === neighbourCell);
-                }
                 findNeighbourFromCell(this, other).link = true;
                 findNeighbourFromCell(other, this).link = true;
-                console.log(`linked ${this.x},${this.y} to ${other.x},${other.y}`)
+            },
+            mask() {
+                Object.values(this.neighbours).filter(neighbour => neighbour.cell).forEach(neighbour => {
+                    const thisAsNeighbour = findNeighbourFromCell(neighbour.cell, this);
+                    neighbour.cell = null;
+                    neighbour.link = false;
+                    thisAsNeighbour.cell = null;
+                    thisAsNeighbour.link = false;
+                });
+                this.masked = true;
             },
             x,y
         };
@@ -94,6 +105,9 @@ function buildGrid(width, height) {
         },
         countCells(fnCriteria) {
             return this.filterCells(fnCriteria).length;
+        },
+        maskCell(x,y) {
+            this.getCell(x, y).mask();
         },
         cells, //TODO remove
         metadata: {},
@@ -342,6 +356,9 @@ function render(maze) {
         ctx.fillRect(x * MAGNIFICATION, y * MAGNIFICATION, MAGNIFICATION, MAGNIFICATION);
     }
     function renderCell(x, y, cell) {
+        if (cell.masked) {
+            return;
+        }
         if (maze.metadata.maxDistance) {
             drawRectangle(x,y,cell.metadata.distance/maze.metadata.maxDistance);
         }
@@ -378,8 +395,24 @@ function showDetails(grid) {
 }
 window.onload = () => {
     "use strict";
-    const grid = buildGrid(20,20),
-        maze = generateMaze(grid);
+    const grid = buildGrid(20,20);
+    grid.maskCell(8,8);
+    grid.maskCell(9,8);
+    grid.maskCell(10,8);
+    grid.maskCell(11,8);
+    grid.maskCell(8,9);
+    grid.maskCell(9,9);
+    grid.maskCell(10,9);
+    grid.maskCell(11,9);
+    grid.maskCell(8,10);
+    grid.maskCell(9,10);
+    grid.maskCell(10,10);
+    grid.maskCell(11,10);
+    grid.maskCell(8,11);
+    grid.maskCell(9,11);
+    grid.maskCell(10,11);
+    grid.maskCell(11,11);
+    const maze = generateMaze(grid);
 
     render(maze);
     showDetails(maze);
@@ -389,8 +422,9 @@ window.onload = () => {
 
     elCanvas.onmousemove = e => {
         const x = Math.floor((e.clientX  - rect.left) / MAGNIFICATION),
-            y = Math.floor((e.clientY - rect.top) / MAGNIFICATION);
-        if (maze.getCell(x,y)){
+            y = Math.floor((e.clientY - rect.top) / MAGNIFICATION),
+            cell = maze.getCell(x,y);
+        if (cell && !cell.masked){
             maze.findDistancesFrom(x,y);
         } else {
             maze.clearMetadata();
