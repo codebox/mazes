@@ -1,3 +1,9 @@
+function randomChoice(arr) {
+    "use strict";
+    console.assert(arr.length);
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
 function buildGrid(width, height) {
     "use strict";
     const cells = [...Array(height)].map((row, y) => [...Array(width)].map((_, x) => {
@@ -8,6 +14,16 @@ function buildGrid(width, height) {
             southEdge: y === height - 1,
             eastEdge: x === width - 1,
             westEdge: x === 0,
+            randomNeighbour: function() {
+                return randomChoice(Object.values(this.neighbours).map(neighbour => neighbour.cell).filter(n => n));
+            },
+            linkTo(other) {
+                function findNeighbourFromCell(thisCell, neighbourCell) {
+                    return Object.values(thisCell.neighbours).find(neighbour => neighbour.cell === neighbourCell);
+                }
+                findNeighbourFromCell(this, other).link = true;
+                findNeighbourFromCell(other, this).link = true;
+            },
             x,y
         };
     }));
@@ -43,6 +59,10 @@ function buildGrid(width, height) {
                 maxDistance = Math.max(frontierDistance+1, maxDistance);
             }
             this.metadata.maxDistance = maxDistance;
+        },
+        clearMetadata() {
+            this.forEachCell(cell => cell.metadata = {});
+            this.metadata = {};
         },
         cells, //TODO remove
         metadata: {},
@@ -102,7 +122,6 @@ function generateMazeSidewinder(grid) {
                 neighbour.neighbours.west.link = true;
 
             } else if (!cell.southEdge) {
-                console.log('end of run ', runLength, x, y)
                 const randomCellFromRun = grid.getCell(x - Math.floor(Math.random() * runLength), y);
                 const neighbour = randomCellFromRun.neighbours.south.cell;
                 randomCellFromRun.neighbours.south.link = true;
@@ -116,10 +135,39 @@ function generateMazeSidewinder(grid) {
     return grid;
 }
 
+function generateMazeAldousBroder(grid) {
+    const startX = Math.floor(Math.random() * grid.width),
+        startY = Math.floor(Math.random() * grid.height);
+
+    let unvisitedCount = grid.width * grid.height,
+        currentCell;
+
+    grid.clearMetadata();
+
+    function moveTo(nextCell) {
+        "use strict";
+        if (!nextCell.metadata.visited) {
+            unvisitedCount--;
+            nextCell.metadata.visited = true;
+            if (currentCell) {
+                currentCell.linkTo(nextCell);
+            }
+        }
+        currentCell = nextCell;
+    }
+
+    moveTo(grid.getCell(startY, startY));
+    while (unvisitedCount) {
+        moveTo(currentCell.randomNeighbour());
+    }
+    return grid;
+}
+
 function generateMaze(grid) {
     "use strict";
     // return generateMazeBinaryTree(grid);
-    return generateMazeSidewinder(grid);
+    //  return generateMazeSidewinder(grid);
+    return generateMazeAldousBroder(grid);
 }
 
 const MAGNIFICATION = 20;
@@ -136,11 +184,13 @@ function render(maze) {
     function drawRectangle(x, y, distance) {
         ctx.moveTo(x * MAGNIFICATION, y * MAGNIFICATION);
         //ctx.fillStyle = `rgba(0, 0, 255, ${distance})`;
-        ctx.fillStyle = `hsl(${Math.floor(100 * distance)}, 100%, 50%)`;
+        ctx.fillStyle = `hsl(${Math.floor(100 - 100 * distance)}, 100%, 50%)`;
         ctx.fillRect(x * MAGNIFICATION, y * MAGNIFICATION, MAGNIFICATION, MAGNIFICATION);
     }
     function renderCell(x, y, cell) {
-        drawRectangle(x,y,cell.metadata.distance/maze.metadata.maxDistance);
+        if (maze.metadata.maxDistance) {
+            drawRectangle(x,y,cell.metadata.distance/maze.metadata.maxDistance);
+        }
         if (!cell.neighbours.north.link) {
             drawWall(x, y, x+1, y);
         }
@@ -172,7 +222,6 @@ window.onload = () => {
     const grid = buildGrid(20,20),
         maze = generateMaze(grid);
 
-    //maze.findDistancesFrom(0,0);
     render(maze);
 
     const elCanvas = document.getElementById('maze'),
@@ -183,7 +232,9 @@ window.onload = () => {
             y = Math.floor((e.clientY - rect.top) / MAGNIFICATION);
         if (maze.getCell(x,y)){
             maze.findDistancesFrom(x,y);
-            render(maze);
+        } else {
+            maze.clearMetadata();
         }
+        render(maze);
     };
 };
