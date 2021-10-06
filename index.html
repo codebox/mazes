@@ -5,9 +5,29 @@
         <link rel="stylesheet" href="css/main.css">
     </head>
     <body>
-        <h1>Maze Generator</h1>
-        <canvas id="maze" width="500" height="500"></canvas>
+        <div id="container">
+            <div id="mazeContainer">
+                <canvas id="maze"></canvas>
+            </div>
+            <div id="sidebarContainer">
+                <div id="title">
+                    <h1>Maze Generator</h1>
+                    <a href="https://github.com/codebox/maze-generator">Source Code</a>
+                </div>
+                <ul id="sizeSelector"></ul>
+                <ul id="algorithmSelector">
+                </ul>
+                <div id="controls">
+                    <button id="go">Go</button>
+                </div>
+            </div>
+        </div>
         <p id="details"></p>
+        <script src="js/config.js"></script>
+        <script src="js/utils.js"></script>
+        <script src="js/model.js"></script>
+        <script src="js/algorithms.js"></script>
+        <script src="js/view.js"></script>
         <script src="js/main.js"></script>
     </body>
 </html>

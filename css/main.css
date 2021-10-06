@@ -1,0 +1,30 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+#container {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+div {
+    border: 1px solid black;
+}
+canvas {
+    border: 1px solid red;
+    display: flex;
+    flex: 1 1 auto;
+}
+#mazeContainer {
+    flex: 1 1 auto;
+    display: flex;
+    min-width: 100px;
+    justify-content: center;
+}
+#sidebarContainer {
+    flex: 0 0 200px;
+}
+#sidebarContainer li.selected {
+    background-color: red;
+}

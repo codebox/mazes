@@ -1,14 +1,4 @@
-function randomInt(num) {
-    "use strict";
-    console.assert(num);
-    return Math.floor(Math.random() * num);
-}
 
-function randomChoice(arr) {
-    "use strict";
-    console.assert(arr.length);
-    return arr[randomInt(arr.length)];
-}
 
 function buildGrid(width, height) {
     "use strict";
@@ -124,221 +114,7 @@ function buildGrid(width, height) {
     return grid;
 }
 
-function generateMazeBinaryTree(grid) {
-    "use strict";
-    for (let x = 0; x < grid.width; x++) {
-        for (let y = 0; y < grid.height; y++) {
-            const cell = grid.getCell(x, y),
-                rnd = Math.random(),
-                removeEastWall = ((rnd < 0.5 || cell.southEdge) && !cell.eastEdge),
-                removeSouthWall = ((rnd >= 0.5 || cell.eastEdge) && !cell.southEdge);
-
-            if (removeEastWall) {
-                const neighbour = cell.neighbours.east.cell;
-                cell.neighbours.east.link = true;
-                console.assert(neighbour.neighbours.west.cell === cell && neighbour.neighbours.west.link === false);
-                neighbour.neighbours.west.link = true;
-
-            } else if (removeSouthWall) {
-                const neighbour = cell.neighbours.south.cell;
-                cell.neighbours.south.link = true;
-                console.assert(neighbour.neighbours.north.cell === cell && neighbour.neighbours.north.link === false);
-                neighbour.neighbours.north.link = true;
-            }
-        }
-    }
-    return grid;
-}
-
-function generateMazeSidewinder(grid) {
-    "use strict";
-    for (let y = 0; y < grid.height; y++) {
-        let runLength = 0;
-        for (let x = 0; x < grid.width; x++) {
-            runLength++;
-            const cell = grid.getCell(x, y),
-                rnd = Math.random(),
-                removeEastWall = (rnd < 0.5 || cell.southEdge) && !cell.eastEdge;
-
-            if (removeEastWall) {
-                const neighbour = cell.neighbours.east.cell;
-                cell.neighbours.east.link = true;
-                console.assert(neighbour.neighbours.west.cell === cell && neighbour.neighbours.west.link === false);
-                neighbour.neighbours.west.link = true;
-
-            } else if (!cell.southEdge) {
-                const randomCellFromRun = grid.getCell(x - randomInt(runLength), y);
-                const neighbour = randomCellFromRun.neighbours.south.cell;
-                randomCellFromRun.neighbours.south.link = true;
-                console.assert(neighbour.neighbours.north.cell === randomCellFromRun && neighbour.neighbours.north.link === false);
-                neighbour.neighbours.north.link = true;
-
-                runLength = 0;
-            }
-        }
-    }
-    return grid;
-}
-
-function generateMazeAldousBroder(grid) {
-    const startX = randomInt(grid.width),
-        startY = randomInt(grid.height);
-
-    let unvisitedCount = grid.width * grid.height,
-        currentCell;
-
-    grid.clearMetadata();
-
-    function moveTo(nextCell) {
-        "use strict";
-        if (!nextCell.metadata.visited) {
-            unvisitedCount--;
-            nextCell.metadata.visited = true;
-            if (currentCell) {
-                currentCell.linkTo(nextCell);
-            }
-        }
-        currentCell = nextCell;
-    }
-
-    moveTo(grid.getCell(startX, startY));
-    while (unvisitedCount) {
-        moveTo(currentCell.randomNeighbour());
-    }
-    return grid;
-}
-
-function generateMazeWilson(grid) {
-    "use strict";
-    grid.clearMetadata();
-
-    function markVisited(cell) {
-        cell.metadata.visited = true;
-    }
-
-    function removeLoops(cells) {
-        const latestCell = cells[cells.length - 1],
-            indexOfPreviousVisit = cells.findIndex(cell => cell === latestCell);
-        if (indexOfPreviousVisit >= 0) {
-            cells.splice(indexOfPreviousVisit + 1);
-        }
-    }
-
-    markVisited(grid.getCell(randomInt(grid.width), randomInt(grid.height)));
-
-    while (true) {
-        let currentCell = grid.getRandomCell(cell => !cell.metadata.visited),
-            currentPath = [currentCell];
-        while (true) {
-            const nextCell = currentCell.randomNeighbour();
-            currentPath.push(nextCell);
-
-            if (nextCell.metadata.visited) {
-                for (let i=0; i<currentPath.length-1; i++) {
-                    const thisCell = currentPath[i],
-                        nextCell = currentPath[i+1];
-                    thisCell.linkTo(nextCell);
-                }
-                currentPath.forEach(cell => cell.metadata.visited = true);
-                break;
-
-            } else {
-                removeLoops(currentPath);
-                currentCell = nextCell;
-            }
-        }
-
-        const unvisitedCount = grid.countCells(cell => !cell.metadata.visited);
-        if (!unvisitedCount) {
-            break;
-        }
-    }
-
-    return grid;
-}
-
-function generateMazeHuntAndKill(grid) {
-    "use strict";
-    grid.clearMetadata();
-
-    let currentCell = grid.getRandomCell();
-
-    function markVisited(cell) {
-        cell.metadata.visited = true;
-    }
-
-    markVisited(currentCell);
-    while (true) {
-        const nextCell = currentCell.randomNeighbour(cell => !cell.metadata.visited);
-        if (nextCell) {
-            markVisited(nextCell);
-            currentCell.linkTo(nextCell);
-            currentCell = nextCell;
-        } else {
-            const newStartCell = grid.getRandomCell(cell => !cell.metadata.visited && cell.filterNeighbours(cell => cell.metadata.visited).length);
-            if (newStartCell) {
-                const visitedNeighbour = newStartCell.randomNeighbour(cell => cell.metadata.visited);
-                markVisited(newStartCell);
-                newStartCell.linkTo(visitedNeighbour);
-                currentCell = newStartCell;
-            } else {
-                break;
-            }
-        }
-    }
-
-    return grid;
-}
-
-function generateRecursiveBacktrack(grid){
-    "use strict";
-    grid.clearMetadata();
-
-    const stack = [];
-    let currentCell;
-
-    function visitCell(nextCell) {
-        const previousCell = currentCell;
-        currentCell = nextCell;
-        currentCell.metadata.visited = true;
-        if (previousCell) {
-            currentCell.linkTo(previousCell);
-        }
-        stack.push(currentCell);
-    }
-
-    visitCell(grid.getRandomCell());
-
-    while (stack.length) {
-        const nextCell = currentCell.randomNeighbour(cell => !cell.metadata.visited);
-        if (nextCell) {
-            visitCell(nextCell);
-
-        } else {
-            while (!currentCell.filterNeighbours(cell => !cell.metadata.visited).length) {
-                stack.pop();
-                if (!stack.length) {
-                    break;
-                }
-                currentCell = stack[stack.length - 1];
-            }
-        }
-    }
-
-    return grid;
-}
-
-function generateMaze(grid) {
-    "use strict";
-    // return generateMazeBinaryTree(grid);
-    // return generateMazeSidewinder(grid);
-    // return generateMazeAldousBroder(grid);
-    // return generateMazeWilson(grid);
-    // return generateMazeHuntAndKill(grid);
-    return generateRecursiveBacktrack(grid);
-}
-
-const MAGNIFICATION = 20;
+const MAGNIFICATION = 10;
 function render(maze) {
     "use strict";
     const elCanvas = document.getElementById('maze'),
@@ -395,40 +171,79 @@ function showDetails(grid) {
 }
 window.onload = () => {
     "use strict";
-    const grid = buildGrid(20,20);
-    grid.maskCell(8,8);
-    grid.maskCell(9,8);
-    grid.maskCell(10,8);
-    grid.maskCell(11,8);
-    grid.maskCell(8,9);
-    grid.maskCell(9,9);
-    grid.maskCell(10,9);
-    grid.maskCell(11,9);
-    grid.maskCell(8,10);
-    grid.maskCell(9,10);
-    grid.maskCell(10,10);
-    grid.maskCell(11,10);
-    grid.maskCell(8,11);
-    grid.maskCell(9,11);
-    grid.maskCell(10,11);
-    grid.maskCell(11,11);
-    const maze = generateMaze(grid);
+    const model = buildModel(),
+        view = buildView();
 
-    render(maze);
-    showDetails(maze);
+    config.mazeSizes.forEach(size => {
+        view.addMazeSize(size, `${size}x${size}`);
+    });
+    view.setMazeSize(model.size);
+
+    config.algorithms.forEach(algorithm => {
+        view.addMazeAlgorithm(algorithm.function, algorithm.name) ;
+    });
+    view.setMazeAlgorithm(model.algorithm);
+
+    // grid.maskCell(8,8);
+    // grid.maskCell(9,8);
+    // grid.maskCell(10,8);
+    // grid.maskCell(11,8);
+    // grid.maskCell(8,9);
+    // grid.maskCell(9,9);
+    // grid.maskCell(10,9);
+    // grid.maskCell(11,9);
+    // grid.maskCell(8,10);
+    // grid.maskCell(9,10);
+    // grid.maskCell(10,10);
+    // grid.maskCell(11,10);
+    // grid.maskCell(8,11);
+    // grid.maskCell(9,11);
+    // grid.maskCell(10,11);
+    // grid.maskCell(11,11);
+    // const maze = generateMaze(grid);
+
+    // const elMazeContainer = document.getElementById('mazeContainer');
+    // window.onresize = () => {
+    //     const width = elMazeContainer.offsetWidth,
+    //         height = elMazeContainer.offsetHeight,
+    //         mazeSize = Math.min(width, height),
+    //         ctx = elCanvas.getContext('2d');
+    //     ctx.canvas.width = mazeSize;
+    //     ctx.canvas.height = mazeSize;
+    //     ctx.scale(mazeSize/500, mazeSize/500);
+    //     render(maze);
+    // };
 
     const elCanvas = document.getElementById('maze'),
         rect = elCanvas.getBoundingClientRect();
 
-    elCanvas.onmousemove = e => {
-        const x = Math.floor((e.clientX  - rect.left) / MAGNIFICATION),
-            y = Math.floor((e.clientY - rect.top) / MAGNIFICATION),
-            cell = maze.getCell(x,y);
-        if (cell && !cell.masked){
-            maze.findDistancesFrom(x,y);
-        } else {
-            maze.clearMetadata();
-        }
-        render(maze);
-    };
+    // elCanvas.onmousemove = e => {
+    //     const x = Math.floor((e.clientX  - rect.left) / MAGNIFICATION),
+    //         y = Math.floor((e.clientY - rect.top) / MAGNIFICATION),
+    //         cell = maze.getCell(x,y);
+    //     if (cell && !cell.masked){
+    //         maze.findDistancesFrom(x,y);
+    //     } else {
+    //         maze.clearMetadata();
+    //     }
+    //     render(maze);
+    // };
+
+    view.on(EVENT_GO_BUTTON_CLICKED).then(() => {
+        const grid = buildGrid(model.size, model.size);
+        view.renderMaze(model.maze = algorithms[model.algorithm](grid));
+        // showDetails(maze);
+    });
+
+    view.on(EVENT_MAZE_SIZE_SELECTED).then(event => {
+         view.setMazeSize(model.size = event.data);
+    });
+
+    view.on(EVENT_MAZE_ALGORITHM_SELECTED).then(event => {
+        view.setMazeAlgorithm(model.algorithm = event.data);
+    });
+
+    view.on(EVENT_RESIZE).then(() => {
+        view.renderMaze(model.maze);
+    });
 };
