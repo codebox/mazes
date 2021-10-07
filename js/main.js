@@ -114,55 +114,55 @@ function buildGrid(width, height) {
     return grid;
 }
 
-const MAGNIFICATION = 10;
-function render(maze) {
-    "use strict";
-    const elCanvas = document.getElementById('maze'),
-        ctx = elCanvas.getContext('2d'),
-        WALL_THICKNESS = 1;
-
-    function drawWall(x0, y0, x1, y1) {
-        ctx.moveTo(x0 * MAGNIFICATION, y0 * MAGNIFICATION);
-        ctx.lineTo(x1 * MAGNIFICATION, y1 * MAGNIFICATION);
-    }
-    function drawRectangle(x, y, distance) {
-        ctx.moveTo(x * MAGNIFICATION, y * MAGNIFICATION);
-        //ctx.fillStyle = `rgba(0, 0, 255, ${distance})`;
-        ctx.fillStyle = `hsl(${Math.floor(100 - 100 * distance)}, 100%, 50%)`;
-        ctx.fillRect(x * MAGNIFICATION, y * MAGNIFICATION, MAGNIFICATION, MAGNIFICATION);
-    }
-    function renderCell(x, y, cell) {
-        if (cell.masked) {
-            return;
-        }
-        if (maze.metadata.maxDistance) {
-            drawRectangle(x,y,cell.metadata.distance/maze.metadata.maxDistance);
-        }
-        if (!cell.neighbours.north.link) {
-            drawWall(x, y, x+1, y);
-        }
-        if (!cell.neighbours.east.link) {
-            drawWall(x+1, y, x+1, y+1);
-        }
-        if (!cell.neighbours.south.link) {
-            drawWall(x, y+1, x+1, y+1);
-        }
-        if (!cell.neighbours.west.link) {
-            drawWall(x, y, x, y+1);
-        }
-    }
-
-    ctx.clearRect(0, 0, 500, 500);
-    ctx.beginPath();
-    ctx.lineWidth = WALL_THICKNESS;
-    for (let x = 0; x < maze.width; x++) {
-        for (let y = 0; y < maze.height; y++) {
-            const cell = maze.getCell(x, y);
-            renderCell(x, y, cell);
-        }
-    }
-    ctx.stroke();
-}
+// const MAGNIFICATION = 10;
+// function render(maze) {
+//     "use strict";
+//     const elCanvas = document.getElementById('maze'),
+//         ctx = elCanvas.getContext('2d'),
+//         WALL_THICKNESS = 1;
+//
+//     function drawWall(x0, y0, x1, y1) {
+//         ctx.moveTo(x0 * MAGNIFICATION, y0 * MAGNIFICATION);
+//         ctx.lineTo(x1 * MAGNIFICATION, y1 * MAGNIFICATION);
+//     }
+//     function drawRectangle(x, y, distance) {
+//         ctx.moveTo(x * MAGNIFICATION, y * MAGNIFICATION);
+//         //ctx.fillStyle = `rgba(0, 0, 255, ${distance})`;
+//         ctx.fillStyle = `hsl(${Math.floor(100 - 100 * distance)}, 100%, 50%)`;
+//         ctx.fillRect(x * MAGNIFICATION, y * MAGNIFICATION, MAGNIFICATION, MAGNIFICATION);
+//     }
+//     function renderCell(x, y, cell) {
+//         if (cell.masked) {
+//             return;
+//         }
+//         if (maze.metadata.maxDistance) {
+//             drawRectangle(x,y,cell.metadata.distance/maze.metadata.maxDistance);
+//         }
+//         if (!cell.neighbours.north.link) {
+//             drawWall(x, y, x+1, y);
+//         }
+//         if (!cell.neighbours.east.link) {
+//             drawWall(x+1, y, x+1, y+1);
+//         }
+//         if (!cell.neighbours.south.link) {
+//             drawWall(x, y+1, x+1, y+1);
+//         }
+//         if (!cell.neighbours.west.link) {
+//             drawWall(x, y, x, y+1);
+//         }
+//     }
+//
+//     ctx.clearRect(0, 0, 500, 500);
+//     ctx.beginPath();
+//     ctx.lineWidth = WALL_THICKNESS;
+//     for (let x = 0; x < maze.width; x++) {
+//         for (let y = 0; y < maze.height; y++) {
+//             const cell = maze.getCell(x, y);
+//             renderCell(x, y, cell);
+//         }
+//     }
+//     ctx.stroke();
+// }
 
 function showDetails(grid) {
     "use strict";

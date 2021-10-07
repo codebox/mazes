@@ -8,19 +8,10 @@ html, body {
     flex-direction: row;
     height: 100%;
 }
-div {
-    border: 1px solid black;
-}
-canvas {
-    border: 1px solid red;
-    display: flex;
-    flex: 1 1 auto;
-}
 #mazeContainer {
+    margin: 10px;
     flex: 1 1 auto;
-    display: flex;
-    min-width: 100px;
-    justify-content: center;
+    min-width: 0;
 }
 #sidebarContainer {
     flex: 0 0 200px;

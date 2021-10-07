@@ -8,6 +8,7 @@ function buildView() {
     const eventTarget = new EventTarget(),
 
         elCanvas = document.getElementById('maze'),
+        elMazeContainer = document.getElementById('mazeContainer'),
         elGoButton = document.getElementById('go'),
         elMazeSizeList = document.getElementById('sizeSelector'),
         elMazeAlgorithmList = document.getElementById('algorithmSelector'),
@@ -21,11 +22,17 @@ function buildView() {
     }
 
     elGoButton.onclick = () => trigger(EVENT_GO_BUTTON_CLICKED);
+    function fitCanvasToContainer() {
+        const minSize = Math.min(elMazeContainer.clientWidth, elMazeContainer.clientHeight);
+        console.log(elMazeContainer.clientWidth, elMazeContainer.clientHeight);
+        elCanvas.width = minSize;
+        elCanvas.height = minSize;
+    }
     window.onresize = () => {
-        elCanvas.width = elCanvas.clientWidth;
-        elCanvas.height = elCanvas.clientHeight;
+        fitCanvasToContainer();
         trigger(EVENT_RESIZE);
     };
+    fitCanvasToContainer();
 
     return {
         addMazeSize(value, description) {
@@ -53,16 +60,19 @@ function buildView() {
             });
         },
         renderMaze(maze) {
-            const WALL_THICKNESS = 1;
+            const WALL_THICKNESS = 1, MAGNIFICATION = Math.round((elCanvas.width - WALL_THICKNESS * (maze.width + 1))/ maze.width), OFFSET = WALL_THICKNESS / 2;
+            function coord(value) {
+                return value * MAGNIFICATION + OFFSET;
+            }
             function drawWall(x0, y0, x1, y1) {
-                ctx.moveTo(x0 * MAGNIFICATION, y0 * MAGNIFICATION);
-                ctx.lineTo(x1 * MAGNIFICATION, y1 * MAGNIFICATION);
+                ctx.moveTo(coord(x0), coord(y0));
+                ctx.lineTo(coord(x1), coord(y1));
             }
 
             function drawRectangle(x, y, distance) {
-                ctx.moveTo(x * MAGNIFICATION, y * MAGNIFICATION);
+                ctx.moveTo(coord(x), coord(y));
                 ctx.fillStyle = `hsl(${Math.floor(100 - 100 * distance)}, 100%, 50%)`;
-                ctx.fillRect(x * MAGNIFICATION, y * MAGNIFICATION, MAGNIFICATION, MAGNIFICATION);
+                ctx.fillRect(coord(x), coord(y), MAGNIFICATION, MAGNIFICATION);
             }
 
             function renderCell(x, y, cell) {
