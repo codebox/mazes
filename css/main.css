@@ -1,24 +1,102 @@
+:root {
+    --font-colour: #444;
+    --border-colour: #222;
+    --alt-colour: #006BB7;
+    --panel-bg-colour: #EEE;
+    --small-font-size: 0.8em;
+    --wide-margin: 10px;
+    --narrow-margin: 5px;
+}
+* {
+    box-sizing: border-box
+}
 html, body {
     width: 100%;
     height: 100%;
     margin: 0;
+    font-family: sans-serif;
+    color: var(--font-colour);
 }
 #container {
     display: flex;
     flex-direction: row;
     height: 100%;
+    padding: var(--wide-margin);
 }
 #mazeContainer {
-    margin: 10px;
     flex: 1 1 auto;
     min-width: 0;
 }
 #sidebarContainer {
-    flex: 0 0 200px;
+    flex: 0 0 220px;
+    padding: var(--narrow-margin);
+    border: 1px solid var(--border-colour);
+    overflow: hidden;
 }
 #sidebarContainer li.selected, p.selected {
-    background-color: red;
+    background-color: var(--alt-colour);
+    color: white;
 }
 #applyMask {
-    margin: 10px 0;
+    margin: var(--wide-margin) 0;
+}
+#sidebarContainer div {
+    border: 1px solid var(--border-colour);
+    background-color: var(--panel-bg-colour);
+    border-radius: 3px;
+}
+#title {
+    text-align: center;
+    padding: 15px 0;
+    margin-bottom: var(--wide-margin);
+}
+h1 {
+    margin: 0;
+    font-weight:normal;
+    font-size: 1.5em;
+}
+#title a {
+    font-size: var(--small-font-size);
+}
+#title a, #title a:visited {
+    color: var(--alt-colour);
+}
+button, li, .selectable {
+    cursor: pointer;
+}
+li, #applyMask p {
+    padding: 2px 5px;
+}
+#sidebarContainer ul {
+    border: 1px solid var(--border-colour);
+    padding: var(--narrow-margin) 0;
+    list-style-type: none;
+    font-size: var(--small-font-size);
+    background-color: var(--panel-bg-colour);
+    border-radius: 3px;
+    margin: var(--narrow-margin) 0;
+}
+#applyMask {
+    padding: var(--narrow-margin) 0;
+    font-size: var(--small-font-size);
+    margin: var(--narrow-margin) 0 var(--wide-margin) 0;
+}
+#applyMask p {
+    margin: 0;
+}
+button {
+    display: block;
+    width: 100%;
+    background-color: var(--panel-bg-colour);
+    margin: 5px 0;
+    border: 1px solid var(--border-colour);
+    border-radius: 3px;
+    padding: var(--narrow-margin) 0;
+    font-size: 1em;
+}
+#go {
+    font-weight: bold;
+}
+#maskNotSupported {
+    text-align: center;
 }
