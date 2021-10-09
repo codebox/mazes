@@ -3,6 +3,7 @@ const EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
     EVENT_SAVE_MASK_BUTTON_CLICKED = 'saveMaskButtonClicked',
     EVENT_REFRESH_BUTTON_CLICKED = 'refreshButtonClicked',
     EVENT_CHANGE_MAZE_CONFIG_BUTTON_CLICKED = 'changeMazeConfigButtonClicked',
+    EVENT_APPLY_MASK_CLICKED = 'applyMaskClicked',
     EVENT_MAZE_SIZE_SELECTED = 'mazeSizeSelected',
     EVENT_MAZE_ALGORITHM_SELECTED = 'mazeAlgorithmSelected',
     EVENT_MOUSE_HOVER = 'mouseHover',
@@ -22,6 +23,9 @@ function buildView(stateMachine, model) {
         elSaveMaskButton = document.getElementById('saveMask'),
         elMazeSizeList = document.getElementById('sizeSelector'),
         elMazeAlgorithmList = document.getElementById('algorithmSelector'),
+        elApplyMask = document.getElementById('applyMask'),
+        elApplyMaskToggle = document.getElementById('applyMaskToggle'),
+        elMaskNotSupported = document.getElementById('maskNotSupported'),
 
         ctx = elCanvas.getContext('2d');
 
@@ -108,6 +112,7 @@ function buildView(stateMachine, model) {
     elSaveMaskButton.onclick = () => trigger(EVENT_SAVE_MASK_BUTTON_CLICKED);
     elChangeMazeConfigButton.onclick = () => trigger(EVENT_CHANGE_MAZE_CONFIG_BUTTON_CLICKED);
     elRefreshButton.onclick = () => trigger(EVENT_REFRESH_BUTTON_CLICKED);
+    elApplyMaskToggle.onclick = () => trigger(EVENT_APPLY_MASK_CLICKED);
 
     function triggerMouseEvent(mouseEvent, viewEventName) {
         const {x,y} = renderer.getMazeCoordsFromScreenCoords(mouseEvent.clientX, mouseEvent.clientY);
@@ -134,7 +139,7 @@ function buildView(stateMachine, model) {
     fitCanvasToContainer();
 
     function toggleElementVisibility(el, display) {
-        el.style.display = display ? 'inline' : 'none';
+        el.style.display = display ? 'block' : 'none';
     }
 
     return {
@@ -183,6 +188,16 @@ function buildView(stateMachine, model) {
         toggleMazeConfig(display) {
             toggleElementVisibility(elMazeSizeList, display);
             toggleElementVisibility(elMazeAlgorithmList, display);
+        },
+        toggleApplyMask(display) {
+            toggleElementVisibility(elApplyMask, display);
+        },
+        setMaskingAllowed(allowed) {
+            toggleElementVisibility(elApplyMaskToggle, allowed);
+            toggleElementVisibility(elMaskNotSupported, !allowed);
+        },
+        setApplyMask(selected) {
+            elApplyMaskToggle.classList.toggle('selected', selected);
         },
         markCellAsMasked(x,y,isMasked) {
             renderer.colourCell(x,y,isMasked ? 'black': 'white');

@@ -18,6 +18,7 @@ window.onload = () => {
         view.addMazeAlgorithm(algorithm.name) ;
     });
     view.setMazeAlgorithm(model.algorithm.name);
+    view.setMaskingAllowed(model.algorithm.maskable);
 
     function onMazeSizeChanged(newSize) {
         view.setMazeSize(model.size = newSize);
@@ -33,6 +34,7 @@ window.onload = () => {
         model.algorithm = selectedAlgorithm;
 
         view.setMazeAlgorithm(selectedAlgorithm.name);
+        view.setMaskingAllowed(selectedAlgorithm.maskable);
     });
 
     view.on(EVENT_RESIZE).then(() => {
@@ -47,6 +49,7 @@ window.onload = () => {
         view.toggleRefreshButton([STATE_DISPLAYING].includes(state));
         view.toggleChangeMazeConfigButton([STATE_DISPLAYING].includes(state));
         view.toggleMazeConfig([STATE_INIT].includes(state));
+        view.toggleApplyMask([STATE_INIT].includes(state));
     }
 
     function applyMask(grid) {
@@ -63,7 +66,7 @@ window.onload = () => {
 
     function renderMaze() {
         const grid = buildGrid(model.size, model.size);
-        if (model.algorithm.maskable) {
+        if (model.algorithm.maskable && model.applyMask) {
             applyMask(grid);
         }
         view.renderMaze(model.maze = algorithms[model.algorithm.function](grid));
@@ -94,6 +97,10 @@ window.onload = () => {
     view.on(EVENT_SAVE_MASK_BUTTON_CLICKED).ifState(STATE_MASKING).then(() => {
         stateMachine.init();
         updateUiForNewState();
+    });
+
+    view.on(EVENT_APPLY_MASK_CLICKED).ifState(STATE_INIT).then(() => {
+        view.setApplyMask(model.applyMask = !model.applyMask);
     });
 
     view.on(EVENT_MOUSE_CLICK).ifState(STATE_MASKING).then(event => {

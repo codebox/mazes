@@ -16,6 +16,9 @@ html, body {
 #sidebarContainer {
     flex: 0 0 200px;
 }
-#sidebarContainer li.selected {
+#sidebarContainer li.selected, p.selected {
     background-color: red;
+}
+#applyMask {
+    margin: 10px 0;
 }
