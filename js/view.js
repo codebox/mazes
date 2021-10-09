@@ -26,6 +26,7 @@ function buildView(stateMachine, model) {
         elApplyMask = document.getElementById('applyMask'),
         elApplyMaskToggle = document.getElementById('applyMaskToggle'),
         elMaskNotSupported = document.getElementById('maskNotSupported'),
+        elInfo= document.getElementById('info'),
 
         ctx = elCanvas.getContext('2d');
 
@@ -212,6 +213,9 @@ function buildView(stateMachine, model) {
                     });
                 })
             }
+        },
+        showInfo(info) {
+            elInfo.innerHTML = info;
         },
         on(eventName) {
             return {

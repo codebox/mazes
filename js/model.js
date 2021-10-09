@@ -4,6 +4,7 @@ function buildModel() {
 
     return {
         mask: {},
+        applyMask: true,
         size,
         algorithm
     };

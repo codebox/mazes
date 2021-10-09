@@ -97,6 +97,11 @@ button {
 #go {
     font-weight: bold;
 }
-#maskNotSupported {
+#maskNotSupported, #info {
     text-align: center;
+}
+div#info {
+    margin-top: var(--wide-margin);
+    background-color: white;
+    padding: var(--wide-margin);
 }

@@ -19,11 +19,15 @@ window.onload = () => {
     });
     view.setMazeAlgorithm(model.algorithm.name);
     view.setMaskingAllowed(model.algorithm.maskable);
+    view.setApplyMask(model.applyMask);
 
-    function onMazeSizeChanged(newSize) {
-        view.setMazeSize(model.size = newSize);
+    function resetGrid(){
         model.maze = buildGrid(model.size, model.size);
         view.renderMaze(model.maze);
+    }
+    function onMazeSizeChanged(newSize) {
+        view.setMazeSize(model.size = newSize);
+        resetGrid();
     }
     view.on(EVENT_MAZE_SIZE_SELECTED).ifState(STATE_INIT).then(event => onMazeSizeChanged(event.data));
     onMazeSizeChanged(model.size);
@@ -50,6 +54,14 @@ window.onload = () => {
         view.toggleChangeMazeConfigButton([STATE_DISPLAYING].includes(state));
         view.toggleMazeConfig([STATE_INIT].includes(state));
         view.toggleApplyMask([STATE_INIT].includes(state));
+
+        const infoMsg = {
+            [STATE_INIT]: 'Click the GO button to create a maze',
+            [STATE_DISPLAYING]: 'Click REFRESH to make a different maze',
+            [STATE_MASKING]: 'Select squares on the grid to create a mask.<br><br>Masked squares will not be included in the maze',
+            [STATE_PLAYING]: ''
+        }[state];
+        view.showInfo(infoMsg);
     }
 
     function applyMask(grid) {
@@ -96,6 +108,7 @@ window.onload = () => {
 
     view.on(EVENT_SAVE_MASK_BUTTON_CLICKED).ifState(STATE_MASKING).then(() => {
         stateMachine.init();
+        resetGrid();
         updateUiForNewState();
     });
 
@@ -116,5 +129,7 @@ window.onload = () => {
         model.mask[model.size][x][y] = newMaskValue;
         view.markCellAsMasked(x,y,newMaskValue);
     });
+
     updateUiForNewState();
+
 };
