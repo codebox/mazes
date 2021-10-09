@@ -1,0 +1,22 @@
+INIT
+    (showing grid)
+    select size
+    select algo
+    toggle mask
+    GO --> DISPLAYING
+    MASK --> MASKING
+
+DISPLAYING
+    NEW --> INIT
+    REFRESH --> DISPLAYING
+    PLAY --> PLAYING
+    hover/click
+
+MASKING
+    click/move
+    SAVE --> INIT
+
+PLAYING
+    cursor keys
+    QUIT --> DISPLAYING
+    restart

@@ -1,4 +1,6 @@
 const algorithms = (() => {
+    const ignoringMaskedCells = cell => !cell.masked,
+        ignoringVisitedAndMaskedCells = cell => !cell.metadata.visited && ignoringMaskedCells(cell);
 
     return {
         binaryTree(grid) {
@@ -56,10 +58,9 @@ const algorithms = (() => {
             return grid;
         },
         aldousBroder(grid) {
-            const startX = randomInt(grid.width),
-                startY = randomInt(grid.height);
+            const startCell = grid.getRandomCell(ignoringMaskedCells);
 
-            let unvisitedCount = grid.width * grid.height,
+            let unvisitedCount = grid.countCells(ignoringMaskedCells),
                 currentCell;
 
             function moveTo(nextCell) {
@@ -74,9 +75,9 @@ const algorithms = (() => {
                 currentCell = nextCell;
             }
 
-            moveTo(grid.getCell(startX, startY));
+            moveTo(startCell);
             while (unvisitedCount) {
-                moveTo(currentCell.randomNeighbour());
+                moveTo(currentCell.randomNeighbour(ignoringMaskedCells));
             }
             return grid;
         },
@@ -94,13 +95,13 @@ const algorithms = (() => {
                 }
             }
 
-            markVisited(grid.getCell(randomInt(grid.width), randomInt(grid.height)));
+            markVisited(grid.getRandomCell(ignoringMaskedCells));
 
             while (true) {
-                let currentCell = grid.getRandomCell(cell => !cell.metadata.visited),
+                let currentCell = grid.getRandomCell(ignoringVisitedAndMaskedCells),
                     currentPath = [currentCell];
                 while (true) {
-                    const nextCell = currentCell.randomNeighbour();
+                    const nextCell = currentCell.randomNeighbour(ignoringMaskedCells);
                     currentPath.push(nextCell);
 
                     if (nextCell.metadata.visited) {
@@ -118,7 +119,7 @@ const algorithms = (() => {
                     }
                 }
 
-                const unvisitedCount = grid.countCells(cell => !cell.metadata.visited);
+                const unvisitedCount = grid.countCells(ignoringVisitedAndMaskedCells);
                 if (!unvisitedCount) {
                     break;
                 }
@@ -128,7 +129,7 @@ const algorithms = (() => {
         },
         huntAndKill(grid) {
             "use strict";
-            let currentCell = grid.getRandomCell();
+            let currentCell = grid.getRandomCell(ignoringMaskedCells);
 
             function markVisited(cell) {
                 cell.metadata.visited = true;
@@ -136,13 +137,13 @@ const algorithms = (() => {
 
             markVisited(currentCell);
             while (true) {
-                const nextCell = currentCell.randomNeighbour(cell => !cell.metadata.visited);
+                const nextCell = currentCell.randomNeighbour(ignoringVisitedAndMaskedCells);
                 if (nextCell) {
                     markVisited(nextCell);
                     currentCell.linkTo(nextCell);
                     currentCell = nextCell;
                 } else {
-                    const newStartCell = grid.getRandomCell(cell => !cell.metadata.visited && cell.filterNeighbours(cell => cell.metadata.visited).length);
+                    const newStartCell = grid.getRandomCell(cell => ignoringVisitedAndMaskedCells(cell) && cell.filterNeighbours(cell => cell.metadata.visited).length);
                     if (newStartCell) {
                         const visitedNeighbour = newStartCell.randomNeighbour(cell => cell.metadata.visited);
                         markVisited(newStartCell);
@@ -171,15 +172,15 @@ const algorithms = (() => {
                 stack.push(currentCell);
             }
 
-            visitCell(grid.getRandomCell());
+            visitCell(grid.getRandomCell(ignoringMaskedCells));
 
             while (stack.length) {
-                const nextCell = currentCell.randomNeighbour(cell => !cell.metadata.visited);
+                const nextCell = currentCell.randomNeighbour(ignoringVisitedAndMaskedCells);
                 if (nextCell) {
                     visitCell(nextCell);
 
                 } else {
-                    while (!currentCell.filterNeighbours(cell => !cell.metadata.visited).length) {
+                    while (!currentCell.filterNeighbours(ignoringVisitedAndMaskedCells).length) {
                         stack.pop();
                         if (!stack.length) {
                             break;
