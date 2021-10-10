@@ -147,6 +147,23 @@ window.onload = () => {
         view.markCellAsMasked(x,y,newMaskValue);
     });
 
+    view.on(EVENT_MOUSE_MOVE).ifState(STATE_MASKING).then(event => {
+        if (!event.data.button) {
+            return;
+        }
+        if (!model.mouseDragStart) {
+            model.mouseDragStart = event.data;
+        }
+        view.selectCellRange(model.mouseDragStart.x, model.mouseDragStart.y, event.data.x, event.data.y);
+        console.log('range',model.mouseDragStart.x, model.mouseDragStart.y, event.data.x, event.data.y)
+    });
+
+    view.on(EVENT_MOUSE_MOVE_END).ifState(STATE_MASKING).then(event => {
+        const startPosition = model.mouseDragStart,
+            endPosition = event.data;
+        model.mouseDragStart = null;
+    });
+
     updateUiForNewState();
 
 };

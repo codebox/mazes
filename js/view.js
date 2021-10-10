@@ -6,7 +6,8 @@ const EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
     EVENT_APPLY_MASK_CLICKED = 'applyMaskClicked',
     EVENT_MAZE_SIZE_SELECTED = 'mazeSizeSelected',
     EVENT_MAZE_ALGORITHM_SELECTED = 'mazeAlgorithmSelected',
-    EVENT_MOUSE_HOVER = 'mouseHover',
+    EVENT_MOUSE_MOVE = 'mouseMove',
+    EVENT_MOUSE_MOVE_END = 'mouseMoveEnd',
     EVENT_MOUSE_CLICK = 'mouseClick',
     EVENT_RESIZE = 'resize';
 
@@ -28,16 +29,21 @@ function buildView(stateMachine, model) {
         elApplyMask = document.getElementById('applyMask'),
         elInfo= document.getElementById('info'),
 
-        ctx = elCanvas.getContext('2d');
+        ctx = elCanvas.getContext('2d'),
+        SELECTED_WALL_COLOUR = 'red';
 
     const renderer = (() => {
-        const WALL_THICKNESS = 1, OFFSET = WALL_THICKNESS / 2;
+        const WALL_THICKNESS = 1, OFFSET = WALL_THICKNESS / 2,
+            DEFAULT_WALL_COLOUR = 'black';
 
         function coord(value) {
             return value * magnification + OFFSET;
         }
 
-        function drawWall(x0, y0, x1, y1) {
+        function drawWall(x0, y0, x1, y1, colour) {
+            if (colour) {
+                ctx.strokeStyle = colour;
+            }
             ctx.moveTo(coord(x0), coord(y0));
             ctx.lineTo(coord(x1), coord(y1));
         }
@@ -48,7 +54,7 @@ function buildView(stateMachine, model) {
             ctx.fillRect(coord(x), coord(y), magnification, magnification);
         }
 
-        let magnification;
+        let magnification, colouredWalls = [];
 
         return {
             render(maze) {
@@ -88,6 +94,37 @@ function buildView(stateMachine, model) {
                 drawRectangle(x,y,colour);
                 ctx.stroke();
             },
+            colourWall(x, y, wall, colour) {
+                let startX, endX, startY, endY;
+
+                if (wall === 'north') {
+                    startX = x;
+                    endX = x + 1;
+                    startY = endY = y;
+                } else if (wall === 'south') {
+                    startX = x;
+                    endX = x + 1;
+                    startY = endY = y + 1;
+                } else if (wall === 'west') {
+                    startX = endX = x;
+                    startY = y;
+                    endY = y + 1;
+                } else if (wall === 'east') {
+                    startX = endX = x + 1;
+                    startY = y;
+                    endY = y + 1;
+                }
+                ctx.beginPath();
+                drawWall(startX, startY, endX, endY, colour);
+                ctx.stroke();
+                colouredWalls.push({x,y,wall});
+            },
+            resetWallColours() {
+                colouredWalls.forEach(wall => {
+                    this.colourWall(wall.x, wall.y, wall.wall, DEFAULT_WALL_COLOUR);
+                });
+                colouredWalls.length = 0;
+            },
             getMazeCoordsFromScreenCoords(screenX, screenY) {
                 const rect = elCanvas.getBoundingClientRect(),
                     x = Math.floor((screenX  - rect.left) / magnification),
@@ -124,8 +161,9 @@ function buildView(stateMachine, model) {
             });
         }
     }
-    elCanvas.onmousemove = elCanvas.onmousedown = event => triggerMouseEvent(event, EVENT_MOUSE_HOVER);;
+    elCanvas.onmousemove = elCanvas.onmousedown = event => triggerMouseEvent(event, EVENT_MOUSE_MOVE);
     elCanvas.onclick = event => triggerMouseEvent(event, EVENT_MOUSE_CLICK);
+    elCanvas.onmouseup = elCanvas.onmouseout = event => triggerMouseEvent(event, EVENT_MOUSE_MOVE_END);
 
     function fitCanvasToContainer() {
         const minSize = Math.min(elMazeContainer.clientWidth, elMazeContainer.clientHeight);
@@ -200,8 +238,33 @@ function buildView(stateMachine, model) {
         setApplyMask(selected) {
             elApplyMaskToggle.classList.toggle('selected', selected);
         },
-        markCellAsMasked(x,y,isMasked) {
+        markCellAsMasked(x,y, isMasked) {
             renderer.colourCell(x,y,isMasked ? 'black': 'white');
+        },
+        selectCellRange(x1, y1, x2, y2) {
+            const startX = Math.min(x1, x2),
+                startY = Math.min(y1, y2),
+                endX = Math.max(x1, x2),
+                endY = Math.max(y1, y2);
+
+            renderer.resetWallColours();
+
+            for (let x = startX; x <= endX; x++) {
+                for (let y = startY; y <= endY; y++) {
+                    if (x === startX) {
+                        renderer.colourWall(x, y, 'west', SELECTED_WALL_COLOUR);
+                    }
+                    if (x === endX) {
+                        renderer.colourWall(x, y, 'east', SELECTED_WALL_COLOUR);
+                    }
+                    if (y === startY) {
+                        renderer.colourWall(x, y, 'north', SELECTED_WALL_COLOUR);
+                    }
+                    if (y === endY) {
+                        renderer.colourWall(x, y, 'south', SELECTED_WALL_COLOUR);
+                    }
+                }
+            }
         },
         displayMaskedCells(mask) {
             mask.forEach((x,y,isMasked) => {
