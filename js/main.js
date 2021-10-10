@@ -28,6 +28,7 @@ window.onload = () => {
     function onMazeSizeChanged(newSize) {
         view.setMazeSize(model.size = newSize);
         resetGrid();
+        updateUiMaskInputs();
     }
     view.on(EVENT_MAZE_SIZE_SELECTED).ifState(STATE_INIT).then(event => onMazeSizeChanged(event.data));
     onMazeSizeChanged(model.size);
@@ -38,12 +39,35 @@ window.onload = () => {
         model.algorithm = selectedAlgorithm;
 
         view.setMazeAlgorithm(selectedAlgorithm.name);
-        view.setMaskingAllowed(selectedAlgorithm.maskable);
+        updateUiMaskInputs();
     });
 
     view.on(EVENT_RESIZE).then(() => {
         view.renderMaze(model.maze);
     });
+
+    function updateUiMaskInputs() {
+        const maskingAllowed = model.algorithm.maskable,
+            maskDefined = !model.masks.getCurrent().isEmpty(),
+            state = stateMachine.state;
+
+        /*
+        create/edit mask button visible
+        create/edit mask button text
+
+        apply mask toggle visible or
+        no masking allowed visible or
+        neither visible
+
+        apply mask toggle selected
+        */
+
+        view.toggleMaskButton(state === STATE_INIT && maskingAllowed);
+        view.updateEditMaskButtonText(maskDefined);
+        view.togglelApplyMask(state === STATE_INIT && (maskDefined || !maskingAllowed));
+        view.setMaskingAllowed(maskingAllowed);
+        view.setApplyMask(model.applyMask);
+    }
 
     function updateUiForNewState() {
         const state = stateMachine.state;
@@ -53,7 +77,7 @@ window.onload = () => {
         view.toggleRefreshButton([STATE_DISPLAYING].includes(state));
         view.toggleChangeMazeConfigButton([STATE_DISPLAYING].includes(state));
         view.toggleMazeConfig([STATE_INIT].includes(state));
-        view.toggleApplyMask([STATE_INIT].includes(state));
+        updateUiMaskInputs();
 
         const infoMsg = {
             [STATE_INIT]: 'Click the GO button to create a maze',
@@ -65,15 +89,12 @@ window.onload = () => {
     }
 
     function applyMask(grid) {
-        if (model.mask[model.size]) {
-            model.mask[model.size].forEach((row,x) => {
-                row.forEach((isMasked,y) => {
-                    if (isMasked) {
-                        grid.maskCell(x, y);
-                    }
-                });
-            })
-        }
+        const mask = model.masks.getCurrent();
+        mask.forEach((x, y, isMasked) => {
+            if (isMasked) {
+                grid.maskCell(x, y);
+            }
+        });
     }
 
     function renderMaze() {
@@ -103,12 +124,13 @@ window.onload = () => {
     view.on(EVENT_MASK_BUTTON_CLICKED).ifState(STATE_INIT).then(() => {
         stateMachine.masking();
         updateUiForNewState();
-        view.displayMaskedCells(model.mask[model.size]);
+        view.displayMaskedCells(model.masks.getCurrent());
     });
 
     view.on(EVENT_SAVE_MASK_BUTTON_CLICKED).ifState(STATE_MASKING).then(() => {
         stateMachine.init();
         resetGrid();
+        model.applyMask = !model.masks.getCurrent().isEmpty();
         updateUiForNewState();
     });
 
@@ -118,15 +140,10 @@ window.onload = () => {
 
     view.on(EVENT_MOUSE_CLICK).ifState(STATE_MASKING).then(event => {
         const x = event.data.x,
-            y = event.data.y;
-        if (!model.mask[model.size]) {
-            model.mask[model.size] = [];
-        }
-        if (!model.mask[model.size][x]) {
-            model.mask[model.size][x] = [];
-        }
-        const newMaskValue = ! model.mask[model.size][x][y];
-        model.mask[model.size][x][y] = newMaskValue;
+            y = event.data.y,
+            mask = model.masks.getCurrent();
+        const newMaskValue = ! mask.get(x,y);
+        mask.set(x,y,newMaskValue);
         view.markCellAsMasked(x,y,newMaskValue);
     });
 

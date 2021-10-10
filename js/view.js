@@ -23,9 +23,9 @@ function buildView(stateMachine, model) {
         elSaveMaskButton = document.getElementById('saveMask'),
         elMazeSizeList = document.getElementById('sizeSelector'),
         elMazeAlgorithmList = document.getElementById('algorithmSelector'),
-        elApplyMask = document.getElementById('applyMask'),
         elApplyMaskToggle = document.getElementById('applyMaskToggle'),
         elMaskNotSupported = document.getElementById('maskNotSupported'),
+        elApplyMask = document.getElementById('applyMask'),
         elInfo= document.getElementById('info'),
 
         ctx = elCanvas.getContext('2d');
@@ -190,7 +190,7 @@ function buildView(stateMachine, model) {
             toggleElementVisibility(elMazeSizeList, display);
             toggleElementVisibility(elMazeAlgorithmList, display);
         },
-        toggleApplyMask(display) {
+        togglelApplyMask(display) {
             toggleElementVisibility(elApplyMask, display);
         },
         setMaskingAllowed(allowed) {
@@ -203,16 +203,13 @@ function buildView(stateMachine, model) {
         markCellAsMasked(x,y,isMasked) {
             renderer.colourCell(x,y,isMasked ? 'black': 'white');
         },
-        displayMaskedCells(maskedCells) {
-            if (maskedCells) {
-                maskedCells.forEach((row,x) => {
-                    row.forEach((isMasked,y) => {
-                        if (isMasked) {
-                            this.markCellAsMasked(x,y,true);
-                        }
-                    });
-                })
-            }
+        displayMaskedCells(mask) {
+            mask.forEach((x,y,isMasked) => {
+                this.markCellAsMasked(x,y,isMasked);
+            });
+        },
+        updateEditMaskButtonText(maskExists) {
+            elMaskButton.innerHTML = maskExists ? 'Edit Mask' : 'Create Mask';
         },
         showInfo(info) {
             elInfo.innerHTML = info;
