@@ -64,7 +64,7 @@ function buildView(stateMachine, model) {
                 ctx.lineWidth = WALL_THICKNESS;
 
                 maze.forEachCell((cell, x, y) => {
-                    if (cell.metadata.selected) {
+                    if (cell.metadata.selected || (stateMachine.state === STATE_MASKING && cell.masked)) {
                         drawRectangle(x, y, CELL_SELECTED_COLOUR);
 
                     } else if (cell.masked) {
@@ -176,8 +176,8 @@ function buildView(stateMachine, model) {
                 el.classList.toggle('selected', el.dataset.value === algorithmName);
             });
         },
-        renderMaze(maze, showMasked=false) {
-            renderer.render(maze, showMasked);
+        renderMaze(maze) {
+            renderer.render(maze);
         },
         toggleGoButton(display) {
             toggleElementVisibility(elGoButton, display);

@@ -21,13 +21,9 @@ window.onload = () => {
     view.setMaskingAllowed(model.algorithm.maskable);
     view.setApplyMask(model.applyMask);
 
-    function resetGrid(){
-        model.maze = buildGrid(model.size, model.size);
-        view.renderMaze(model.maze);
-    }
     function onMazeSizeChanged(newSize) {
         view.setMazeSize(model.size = newSize);
-        resetGrid();
+        renderMaze(false);
         updateUiMaskInputs();
     }
     view.on(EVENT_MAZE_SIZE_SELECTED).ifState(STATE_INIT).then(event => onMazeSizeChanged(event.data));
@@ -40,10 +36,11 @@ window.onload = () => {
 
         view.setMazeAlgorithm(selectedAlgorithm.name);
         updateUiMaskInputs();
+        renderMaze(false);
     });
 
     view.on(EVENT_RESIZE).then(() => {
-        view.renderMaze(model.maze);
+        renderMaze(false);
     });
 
     function updateUiMaskInputs() {
@@ -87,56 +84,56 @@ window.onload = () => {
         });
     }
 
-    function renderMaze() {
+    function renderMaze(applyAlgorithm) {
         const grid = buildGrid(model.size, model.size);
         if (model.algorithm.maskable && model.applyMask) {
             applyMask(grid);
         }
-        view.renderMaze(model.maze = algorithms[model.algorithm.function](grid));
+        const maze = applyAlgorithm ? algorithms[model.algorithm.function](grid) : grid;
+        view.renderMaze(model.maze = maze);
     }
+
     view.on(EVENT_GO_BUTTON_CLICKED).ifState(STATE_INIT).then(() => {
-        renderMaze();
         stateMachine.displaying();
+        renderMaze(true);
         updateUiForNewState();
     });
 
     view.on(EVENT_REFRESH_BUTTON_CLICKED).ifState(STATE_DISPLAYING).then(() => {
-        renderMaze();
+        renderMaze(true);
     });
 
     view.on(EVENT_CHANGE_MAZE_CONFIG_BUTTON_CLICKED).ifState(STATE_DISPLAYING).then(() => {
-        const grid = buildGrid(model.size, model.size);
-        view.renderMaze(model.maze = grid);
         stateMachine.init();
+        renderMaze(false);
         updateUiForNewState();
     });
 
     view.on(EVENT_MASK_BUTTON_CLICKED).ifState(STATE_INIT).then(() => {
         stateMachine.masking();
         updateUiForNewState();
-        applyMask(model.maze);
-        view.renderMaze(model.maze, true);
+        renderMaze(false);
     });
 
     view.on(EVENT_SAVE_MASK_BUTTON_CLICKED).ifState(STATE_MASKING).then(() => {
-        model.masks.getCurrent().setFromModel();
         if (model.masks.getCurrent().isConnected()) {
             stateMachine.init();
-            resetGrid();
             model.applyMask = !model.masks.getCurrent().isEmpty();
+            renderMaze(false);
             updateUiForNewState();
         } else {
             alert('INVALID MASK\nYour mask has cut off one or more cells so they are not reachable from the rest of the maze.');
         }
     });
     view.on(EVENT_CLEAR_MASK_BUTTON_CLICKED).ifState(STATE_MASKING).then(() => {
-        resetGrid();
+        renderMaze(false);
         model.maze.forEachCell(cell => cell.unmask());
         view.renderMaze(model.maze);
     });
 
     view.on(EVENT_APPLY_MASK_CLICKED).ifState(STATE_INIT).then(() => {
         view.setApplyMask(model.applyMask = !model.applyMask);
+        renderMaze(false);
     });
 
     function selectCellRange(x1,y1,x2,y2) {
@@ -168,8 +165,7 @@ window.onload = () => {
         } else {
             model.maze.getCell(event.data.x, event.data.y).metadata.selected = true;
         }
-
-        view.renderMaze(model.maze, true);
+        view.renderMaze(model.maze);
     });
 
     view.on(EVENT_MOUSE_MOVE_END).ifState(STATE_MASKING).then(event => {
@@ -183,7 +179,8 @@ window.onload = () => {
                 delete cell.metadata.selected;
             }
         });
-        view.renderMaze(model.maze, true);
+        model.masks.getCurrent().setFromModel();
+        view.renderMaze(model.maze);
         delete model.mouseDragStart;
     });
 
