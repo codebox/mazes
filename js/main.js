@@ -51,17 +51,6 @@ window.onload = () => {
             maskDefined = !model.masks.getCurrent().isEmpty(),
             state = stateMachine.state;
 
-        /*
-        create/edit mask button visible
-        create/edit mask button text
-
-        apply mask toggle visible or
-        no masking allowed visible or
-        neither visible
-
-        apply mask toggle selected
-        */
-
         view.toggleMaskButton(state === STATE_INIT && maskingAllowed);
         view.updateEditMaskButtonText(maskDefined);
         view.togglelApplyMask(state === STATE_INIT && (maskDefined || !maskingAllowed));
@@ -74,6 +63,7 @@ window.onload = () => {
         view.toggleGoButton([STATE_INIT].includes(state));
         view.toggleMaskButton([STATE_INIT].includes(state));
         view.toggleSaveMaskButton([STATE_MASKING].includes(state));
+        view.toggleClearMaskButton([STATE_MASKING].includes(state));
         view.toggleRefreshButton([STATE_DISPLAYING].includes(state));
         view.toggleChangeMazeConfigButton([STATE_DISPLAYING].includes(state));
         view.toggleMazeConfig([STATE_INIT].includes(state));
@@ -124,28 +114,42 @@ window.onload = () => {
     view.on(EVENT_MASK_BUTTON_CLICKED).ifState(STATE_INIT).then(() => {
         stateMachine.masking();
         updateUiForNewState();
-        view.displayMaskedCells(model.masks.getCurrent());
+        applyMask(model.maze);
+        view.renderMaze(model.maze, true);
     });
 
     view.on(EVENT_SAVE_MASK_BUTTON_CLICKED).ifState(STATE_MASKING).then(() => {
+        model.masks.getCurrent().setFromModel();
         stateMachine.init();
         resetGrid();
         model.applyMask = !model.masks.getCurrent().isEmpty();
         updateUiForNewState();
+    });
+    view.on(EVENT_CLEAR_MASK_BUTTON_CLICKED).ifState(STATE_MASKING).then(() => {
+        resetGrid();
+        model.maze.forEachCell(cell => cell.unmask());
+        view.renderMaze(model.maze);
     });
 
     view.on(EVENT_APPLY_MASK_CLICKED).ifState(STATE_INIT).then(() => {
         view.setApplyMask(model.applyMask = !model.applyMask);
     });
 
-    view.on(EVENT_MOUSE_CLICK).ifState(STATE_MASKING).then(event => {
-        const x = event.data.x,
-            y = event.data.y,
-            mask = model.masks.getCurrent();
-        const newMaskValue = ! mask.get(x,y);
-        mask.set(x,y,newMaskValue);
-        view.markCellAsMasked(x,y,newMaskValue);
-    });
+    function selectCellRange(x1,y1,x2,y2) {
+        const startX = Math.min(x1, x2),
+            startY = Math.min(y1, y2),
+            endX = Math.max(x1, x2),
+            endY = Math.max(y1, y2);
+
+        const grid = model.maze;
+        grid.clearMetadata();
+
+        for (let x = startX; x <= endX; x++) {
+            for (let y = startY; y <= endY; y++) {
+                grid.getCell(x,y).metadata.selected = true;
+            }
+        }
+    }
 
     view.on(EVENT_MOUSE_MOVE).ifState(STATE_MASKING).then(event => {
         if (!event.data.button) {
@@ -154,14 +158,24 @@ window.onload = () => {
         if (!model.mouseDragStart) {
             model.mouseDragStart = event.data;
         }
-        view.selectCellRange(model.mouseDragStart.x, model.mouseDragStart.y, event.data.x, event.data.y);
-        console.log('range',model.mouseDragStart.x, model.mouseDragStart.y, event.data.x, event.data.y)
+
+        selectCellRange(model.mouseDragStart.x, model.mouseDragStart.y, event.data.x, event.data.y);
+        view.renderMaze(model.maze, true);
     });
 
     view.on(EVENT_MOUSE_MOVE_END).ifState(STATE_MASKING).then(event => {
-        const startPosition = model.mouseDragStart,
-            endPosition = event.data;
-        model.mouseDragStart = null;
+        model.maze.forEachCell(cell => {
+            if (cell.metadata.selected) {
+                if (cell.masked) {
+                    cell.unmask();
+                } else {
+                    cell.mask();
+                }
+                delete cell.metadata.selected;
+            }
+        });
+        view.renderMaze(model.maze, true);
+        delete model.mouseDragStart;
     });
 
     updateUiForNewState();

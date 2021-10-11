@@ -36,6 +36,16 @@ function buildGrid(width, height) {
                 });
                 this.masked = true;
             },
+            unmask() {
+                this.populateNeighbours();
+                this.masked = false;
+            },
+            populateNeighbours() {
+                this.neighbours.north = {cell: grid.getCell(x, y-1), link: false};
+                this.neighbours.south = {cell: grid.getCell(x, y+1), link: false};
+                this.neighbours.west = {cell: grid.getCell(x-1, y), link: false};
+                this.neighbours.east = {cell: grid.getCell(x+1, y), link: false};
+            },
             x,y
         };
     }));
@@ -102,12 +112,7 @@ function buildGrid(width, height) {
         width,height
     };
 
-    grid.forEachCell((cell, x, y) => {
-        cell.neighbours.north = {cell: grid.getCell(x, y-1), link: false};
-        cell.neighbours.south = {cell: grid.getCell(x, y+1), link: false};
-        cell.neighbours.west = {cell: grid.getCell(x-1, y), link: false};
-        cell.neighbours.east = {cell: grid.getCell(x+1, y), link: false};
-    });
+    grid.forEachCell(cell => cell.populateNeighbours());
 
     return grid;
 }

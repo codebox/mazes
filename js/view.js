@@ -1,6 +1,7 @@
 const EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
     EVENT_MASK_BUTTON_CLICKED = 'maskButtonClicked',
     EVENT_SAVE_MASK_BUTTON_CLICKED = 'saveMaskButtonClicked',
+    EVENT_CLEAR_MASK_BUTTON_CLICKED = 'clearMaskButtonClicked',
     EVENT_REFRESH_BUTTON_CLICKED = 'refreshButtonClicked',
     EVENT_CHANGE_MAZE_CONFIG_BUTTON_CLICKED = 'changeMazeConfigButtonClicked',
     EVENT_APPLY_MASK_CLICKED = 'applyMaskClicked',
@@ -22,6 +23,7 @@ function buildView(stateMachine, model) {
         elChangeMazeConfigButton = document.getElementById('changeMazeConfig'),
         elMaskButton = document.getElementById('mask'),
         elSaveMaskButton = document.getElementById('saveMask'),
+        elClearMaskButton = document.getElementById('clearMask'),
         elMazeSizeList = document.getElementById('sizeSelector'),
         elMazeAlgorithmList = document.getElementById('algorithmSelector'),
         elApplyMaskToggle = document.getElementById('applyMaskToggle'),
@@ -30,20 +32,18 @@ function buildView(stateMachine, model) {
         elInfo= document.getElementById('info'),
 
         ctx = elCanvas.getContext('2d'),
-        SELECTED_WALL_COLOUR = 'red';
+        CELL_SELECTED_COLOUR = '#006BB7',
+        CELL_DEFAULT_COLOUR = 'white',
+        CELL_MASKED_COLOUR = 'black';
 
     const renderer = (() => {
-        const WALL_THICKNESS = 1, OFFSET = WALL_THICKNESS / 2,
-            DEFAULT_WALL_COLOUR = 'black';
+        const WALL_THICKNESS = 1, OFFSET = WALL_THICKNESS / 2;
 
         function coord(value) {
             return value * magnification + OFFSET;
         }
 
-        function drawWall(x0, y0, x1, y1, colour) {
-            if (colour) {
-                ctx.strokeStyle = colour;
-            }
+        function drawWall(x0, y0, x1, y1) {
             ctx.moveTo(coord(x0), coord(y0));
             ctx.lineTo(coord(x1), coord(y1));
         }
@@ -54,10 +54,10 @@ function buildView(stateMachine, model) {
             ctx.fillRect(coord(x), coord(y), magnification, magnification);
         }
 
-        let magnification, colouredWalls = [];
+        let magnification;
 
         return {
-            render(maze) {
+            render(maze, showMasked=false) {
                 magnification = Math.round((elCanvas.width - WALL_THICKNESS * (maze.width + 1))/ maze.width);
 
                 ctx.clearRect(0, 0, elCanvas.width, elCanvas.height);
@@ -65,65 +65,36 @@ function buildView(stateMachine, model) {
                 ctx.lineWidth = WALL_THICKNESS;
 
                 maze.forEachCell((cell, x, y) => {
-                    if (cell.masked) {
-                        return;
-                    }
-                    if (maze.metadata.maxDistance) {
-                        const distance = cell.metadata.distance / maze.metadata.maxDistance,
-                            colour = `hsl(${Math.floor(100 - 100 * distance)}, 100%, 50%)`;
-                        drawRectangle(x, y, colour);
-                    }
-                    if (!cell.neighbours.north.link) {
-                        drawWall(x, y, x+1, y);
-                    }
-                    if (!cell.neighbours.east.link) {
-                        drawWall(x+1, y, x+1, y+1);
-                    }
-                    if (!cell.neighbours.south.link) {
-                        drawWall(x, y+1, x+1, y+1);
-                    }
-                    if (!cell.neighbours.west.link) {
-                        drawWall(x, y, x, y+1);
+                    if (cell.metadata.selected) {
+                        drawRectangle(x, y, CELL_SELECTED_COLOUR);
+
+                    } else if (cell.masked) {
+                        if (showMasked) {
+                            drawRectangle(x, y, CELL_MASKED_COLOUR);
+                        }
+
+                    } else {
+                        if (maze.metadata.maxDistance) {
+                            const distance = cell.metadata.distance / maze.metadata.maxDistance,
+                                colour = `hsl(${Math.floor(100 - 100 * distance)}, 100%, 50%)`;
+                            drawRectangle(x, y, colour);
+                        }
+                        if (!cell.neighbours.north.link) {
+                            drawWall(x, y, x + 1, y);
+                        }
+                        if (!cell.neighbours.east.link) {
+                            drawWall(x + 1, y, x + 1, y + 1);
+                        }
+                        if (!cell.neighbours.south.link) {
+                            drawWall(x, y + 1, x + 1, y + 1);
+                        }
+                        if (!cell.neighbours.west.link) {
+                            drawWall(x, y, x, y + 1);
+                        }
                     }
                 });
 
                 ctx.stroke();
-            },
-            colourCell(x,y,colour) {
-                ctx.beginPath();
-                drawRectangle(x,y,colour);
-                ctx.stroke();
-            },
-            colourWall(x, y, wall, colour) {
-                let startX, endX, startY, endY;
-
-                if (wall === 'north') {
-                    startX = x;
-                    endX = x + 1;
-                    startY = endY = y;
-                } else if (wall === 'south') {
-                    startX = x;
-                    endX = x + 1;
-                    startY = endY = y + 1;
-                } else if (wall === 'west') {
-                    startX = endX = x;
-                    startY = y;
-                    endY = y + 1;
-                } else if (wall === 'east') {
-                    startX = endX = x + 1;
-                    startY = y;
-                    endY = y + 1;
-                }
-                ctx.beginPath();
-                drawWall(startX, startY, endX, endY, colour);
-                ctx.stroke();
-                colouredWalls.push({x,y,wall});
-            },
-            resetWallColours() {
-                colouredWalls.forEach(wall => {
-                    this.colourWall(wall.x, wall.y, wall.wall, DEFAULT_WALL_COLOUR);
-                });
-                colouredWalls.length = 0;
             },
             getMazeCoordsFromScreenCoords(screenX, screenY) {
                 const rect = elCanvas.getBoundingClientRect(),
@@ -148,6 +119,7 @@ function buildView(stateMachine, model) {
     elGoButton.onclick = () => trigger(EVENT_GO_BUTTON_CLICKED);
     elMaskButton.onclick = () => trigger(EVENT_MASK_BUTTON_CLICKED);
     elSaveMaskButton.onclick = () => trigger(EVENT_SAVE_MASK_BUTTON_CLICKED);
+    elClearMaskButton.onclick = () => trigger(EVENT_CLEAR_MASK_BUTTON_CLICKED);
     elChangeMazeConfigButton.onclick = () => trigger(EVENT_CHANGE_MAZE_CONFIG_BUTTON_CLICKED);
     elRefreshButton.onclick = () => trigger(EVENT_REFRESH_BUTTON_CLICKED);
     elApplyMaskToggle.onclick = () => trigger(EVENT_APPLY_MASK_CLICKED);
@@ -206,8 +178,8 @@ function buildView(stateMachine, model) {
                 el.classList.toggle('selected', el.dataset.value === algorithmName);
             });
         },
-        renderMaze(maze) {
-            renderer.render(maze);
+        renderMaze(maze, showMasked=false) {
+            renderer.render(maze, showMasked);
         },
         toggleGoButton(display) {
             toggleElementVisibility(elGoButton, display);
@@ -220,6 +192,9 @@ function buildView(stateMachine, model) {
         },
         toggleSaveMaskButton(display) {
             toggleElementVisibility(elSaveMaskButton, display);
+        },
+        toggleClearMaskButton(display) {
+            toggleElementVisibility(elClearMaskButton, display);
         },
         toggleChangeMazeConfigButton(display) {
             toggleElementVisibility(elChangeMazeConfigButton, display);
@@ -237,39 +212,6 @@ function buildView(stateMachine, model) {
         },
         setApplyMask(selected) {
             elApplyMaskToggle.classList.toggle('selected', selected);
-        },
-        markCellAsMasked(x,y, isMasked) {
-            renderer.colourCell(x,y,isMasked ? 'black': 'white');
-        },
-        selectCellRange(x1, y1, x2, y2) {
-            const startX = Math.min(x1, x2),
-                startY = Math.min(y1, y2),
-                endX = Math.max(x1, x2),
-                endY = Math.max(y1, y2);
-
-            renderer.resetWallColours();
-
-            for (let x = startX; x <= endX; x++) {
-                for (let y = startY; y <= endY; y++) {
-                    if (x === startX) {
-                        renderer.colourWall(x, y, 'west', SELECTED_WALL_COLOUR);
-                    }
-                    if (x === endX) {
-                        renderer.colourWall(x, y, 'east', SELECTED_WALL_COLOUR);
-                    }
-                    if (y === startY) {
-                        renderer.colourWall(x, y, 'north', SELECTED_WALL_COLOUR);
-                    }
-                    if (y === endY) {
-                        renderer.colourWall(x, y, 'south', SELECTED_WALL_COLOUR);
-                    }
-                }
-            }
-        },
-        displayMaskedCells(mask) {
-            mask.forEach((x,y,isMasked) => {
-                this.markCellAsMasked(x,y,isMasked);
-            });
         },
         updateEditMaskButtonText(maskExists) {
             elMaskButton.innerHTML = maskExists ? 'Edit Mask' : 'Create Mask';
