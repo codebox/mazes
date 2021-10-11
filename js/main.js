@@ -72,7 +72,7 @@ window.onload = () => {
         const infoMsg = {
             [STATE_INIT]: 'Click the GO button to create a maze',
             [STATE_DISPLAYING]: 'Click REFRESH to make a different maze',
-            [STATE_MASKING]: 'Select squares on the grid to create a mask.<br><br>Masked squares will not be included in the maze',
+            [STATE_MASKING]: 'Select squares on the grid to create a mask.<br><br>Hold down SHIFT to select a rectangle.<br><br>Masked squares will not be included in the maze',
             [STATE_PLAYING]: ''
         }[state];
         view.showInfo(infoMsg);
@@ -163,7 +163,12 @@ window.onload = () => {
             model.mouseDragStart = event.data;
         }
 
-        selectCellRange(model.mouseDragStart.x, model.mouseDragStart.y, event.data.x, event.data.y);
+        if (event.data.shift) {
+            selectCellRange(model.mouseDragStart.x, model.mouseDragStart.y, event.data.x, event.data.y);
+        } else {
+            model.maze.getCell(event.data.x, event.data.y).metadata.selected = true;
+        }
+
         view.renderMaze(model.maze, true);
     });
 
