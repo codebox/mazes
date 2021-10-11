@@ -120,10 +120,14 @@ window.onload = () => {
 
     view.on(EVENT_SAVE_MASK_BUTTON_CLICKED).ifState(STATE_MASKING).then(() => {
         model.masks.getCurrent().setFromModel();
-        stateMachine.init();
-        resetGrid();
-        model.applyMask = !model.masks.getCurrent().isEmpty();
-        updateUiForNewState();
+        if (model.masks.getCurrent().isConnected()) {
+            stateMachine.init();
+            resetGrid();
+            model.applyMask = !model.masks.getCurrent().isEmpty();
+            updateUiForNewState();
+        } else {
+            alert('INVALID MASK\nYour mask has cut off one or more cells so they are not reachable from the rest of the maze.');
+        }
     });
     view.on(EVENT_CLEAR_MASK_BUTTON_CLICKED).ifState(STATE_MASKING).then(() => {
         resetGrid();

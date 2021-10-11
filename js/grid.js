@@ -29,10 +29,12 @@ function buildGrid(width, height) {
             mask() {
                 Object.values(this.neighbours).filter(neighbour => neighbour.cell).forEach(neighbour => {
                     const thisAsNeighbour = findNeighbourFromCell(neighbour.cell, this);
-                    neighbour.cell = null;
-                    neighbour.link = false;
-                    thisAsNeighbour.cell = null;
-                    thisAsNeighbour.link = false;
+                    if (thisAsNeighbour) {
+                        neighbour.cell = null;
+                        neighbour.link = false;
+                        thisAsNeighbour.cell = null;
+                        thisAsNeighbour.link = false;
+                    }
                 });
                 this.masked = true;
             },
