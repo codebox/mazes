@@ -33,7 +33,8 @@ function buildView(stateMachine, model) {
 
         ctx = elCanvas.getContext('2d'),
         CELL_SELECTED_COLOUR = '#006BB7',
-        CELL_MASKED_COLOUR = 'white';
+        CELL_DEFAULT_COLOUR = 'white',
+        CELL_MASKED_COLOUR = 'black';
 
     const renderer = (() => {
         const WALL_THICKNESS = 1, OFFSET = WALL_THICKNESS / 2;
@@ -64,11 +65,11 @@ function buildView(stateMachine, model) {
                 ctx.lineWidth = WALL_THICKNESS;
 
                 maze.forEachCell((cell, x, y) => {
-                    if (cell.metadata.selected || (stateMachine.state === STATE_MASKING && cell.masked)) {
+                    if (cell.metadata.selected) {
                         drawRectangle(x, y, CELL_SELECTED_COLOUR);
 
                     } else if (cell.masked) {
-                        drawRectangle(x, y, CELL_MASKED_COLOUR);
+                        drawRectangle(x, y, stateMachine.state === STATE_MASKING ? CELL_MASKED_COLOUR : CELL_DEFAULT_COLOUR );
 
                     } else {
                         if (maze.metadata.maxDistance) {

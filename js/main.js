@@ -126,9 +126,9 @@ window.onload = () => {
         }
     });
     view.on(EVENT_CLEAR_MASK_BUTTON_CLICKED).ifState(STATE_MASKING).then(() => {
-        renderMaze(false);
         model.maze.forEachCell(cell => cell.unmask());
-        view.renderMaze(model.maze);
+        model.masks.getCurrent().setFromModel();
+        renderMaze(false);
     });
 
     view.on(EVENT_APPLY_MASK_CLICKED).ifState(STATE_INIT).then(() => {
