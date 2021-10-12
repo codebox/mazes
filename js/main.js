@@ -64,7 +64,7 @@ window.onload = () => {
         view.toggleRefreshButton([STATE_DISPLAYING].includes(state));
         view.toggleChangeMazeConfigButton([STATE_DISPLAYING].includes(state));
         view.toggleMazeConfig([STATE_INIT].includes(state));
-        view.toggleDetails([STATE_DISPLAYING].includes(state));
+        view.toggleDetails([STATE_DISPLAYING, STATE_PLAYING].includes(state));
         view.togglePlayButton([STATE_DISPLAYING].includes(state));
         updateUiMaskInputs();
 
@@ -127,15 +127,18 @@ window.onload = () => {
     });
 
     view.on(EVENT_SAVE_MASK_BUTTON_CLICKED).ifState(STATE_MASKING).then(() => {
-        if (model.masks.getCurrent().isConnected()) {
+        try {
+            model.masks.getCurrent().validate();
             stateMachine.init();
             model.applyMask = !model.masks.getCurrent().isEmpty();
             renderMaze(false);
             updateUiForNewState();
-        } else {
-            alert('INVALID MASK\nYour mask has cut off one or more cells so they are not reachable from the rest of the maze.');
+
+        } catch (msg) {
+            alert('INVALID MASK\n' + msg);
         }
     });
+
     view.on(EVENT_CLEAR_MASK_BUTTON_CLICKED).ifState(STATE_MASKING).then(() => {
         model.maze.forEachCell(cell => cell.unmask());
         model.masks.getCurrent().setFromModel();
@@ -208,7 +211,10 @@ window.onload = () => {
     function movePlayer(newCell) {
         const currentCell = model.playState.cell;
         delete currentCell.metadata.player;
-        currentCell.metadata.playerVisited = true;
+        if (!currentCell.metadata.playerVisited) {
+            currentCell.metadata.playerVisited = 0;
+        }
+        currentCell.metadata.playerVisited++;
         newCell.metadata.player = true;
         model.playState.cell = newCell;
         view.renderMaze(model.maze);
@@ -230,6 +236,17 @@ window.onload = () => {
         model.maze.getCell(endX, endY).metadata.finish = true;
         updateUiForNewState();
         movePlayer(model.playState.cell);
+
+        model.playState.timerStart = Date.now();
+
+        function updateTime() {
+            view.showDetails(`Time Elapsed: <em>${formatTime(Date.now() - model.playState.timerStart)}</em>`);
+        }
+        updateTime();
+
+        model.playState.timer = setInterval(() => {
+            updateTime();
+        }, 1000);
     });
 
     view.on(EVENT_NAVIGATE).ifState(STATE_PLAYING).then(event => {
@@ -247,11 +264,30 @@ window.onload = () => {
                 'west': 'east'
             }[direction];
         }
+        function mazeCompleted() {
+            clearInterval(model.playState.timer);
+            const elaspedTimeMillis = Date.now() - model.playState.timerStart,
+                elapsedTime = formatTime(elaspedTimeMillis),
+                visitedCells = model.maze.filterCells(cell => cell.metadata.playerVisited).reduce((total, cell) => total + cell.metadata.playerVisited ,0),
+                details = model.maze.getDetails(),
+                optimalRouteLength = details.maxDistance;
+            view.showDetails(`
+                Finish Time: ${elapsedTime}<br>
+                Visited: ${visitedCells}<br>
+                Optimal: ${optimalRouteLength}
+            `);
+        }
 
         while(true) {
             moveOk = model.playState.cell.neighbours[direction].link;
             if (moveOk) {
-                movePlayer(model.playState.cell.neighbours[direction].cell);
+                const newLocation = model.playState.cell.neighbours[direction].cell;
+                movePlayer(newLocation);
+                if (newLocation.metadata.finish) {
+                    mazeCompleted();
+                    break;
+                }
+
                 if (event.data.shift) {
                     if (event.data.ctrl) {
                         const availableDirections = getAvailableDirections();

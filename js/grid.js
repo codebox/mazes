@@ -87,7 +87,7 @@ function buildGrid(width, height) {
                     maxDistance = Math.max(frontierDistance+1, maxDistance);
                 }
             }
-            this.metadata.maxDistance = maxDistance;
+            this.metadata.maxDistance = maxDistance + 1;
             if (maxDistancePoint) {
                 this.metadata.maxDistancePoint = {x: maxDistancePoint.x, y: maxDistancePoint.y};
             } else {

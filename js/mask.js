@@ -27,7 +27,7 @@ function buildMaskManager(model) {
                 });
                 return maskCount === 0;
             },
-            isConnected() {
+            validate() {
                 const grid = buildGrid(size, size);
                 this.forEach((x,y,masked) => {
                     if (masked) {
@@ -39,7 +39,10 @@ function buildMaskManager(model) {
                     unmaskedCellCount = grid.filterCells(isNotMasked).length;
 
                 if (!startCell) {
-                    return false;
+                    throw 'No unmasked cells remain';
+                }
+                if (unmaskedCellCount < 4) {
+                    throw 'Not enough unmasked cells to build a maze';
                 }
 
                 function countUnmasked(cell) {
@@ -53,7 +56,9 @@ function buildMaskManager(model) {
                     return count;
                 }
 
-                return unmaskedCellCount == countUnmasked(startCell);
+                if (unmaskedCellCount !== countUnmasked(startCell)) {
+                    throw 'Your mask has cut off one or more cells so they are not reachable from the rest of the maze.';
+                }
             }
         };
     }

@@ -195,7 +195,6 @@ function buildView(stateMachine, model) {
 
     function fitCanvasToContainer() {
         const minSize = Math.min(elMazeContainer.clientWidth, elMazeContainer.clientHeight);
-        console.log(elMazeContainer.clientWidth, elMazeContainer.clientHeight);
         elCanvas.width = minSize;
         elCanvas.height = minSize;
     }
