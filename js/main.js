@@ -64,6 +64,7 @@ window.onload = () => {
         view.toggleRefreshButton([STATE_DISPLAYING].includes(state));
         view.toggleChangeMazeConfigButton([STATE_DISPLAYING].includes(state));
         view.toggleMazeConfig([STATE_INIT].includes(state));
+        view.toggleDetails([STATE_DISPLAYING].includes(state));
         updateUiMaskInputs();
 
         const infoMsg = {
@@ -91,6 +92,15 @@ window.onload = () => {
         }
         const maze = applyAlgorithm ? algorithms[model.algorithm.function](grid) : grid;
         view.renderMaze(model.maze = maze);
+        if (applyAlgorithm) {
+            const details = model.maze.getDetails();
+
+            view.showDetails(`
+                Cells: <em>${details.cellCount}</em><br>
+                Longest Path: <em>${details.maxDistance}</em><br>
+                Dead Ends: <em>${details.deadEnds}</em><br>
+            `);
+        }
     }
 
     view.on(EVENT_GO_BUTTON_CLICKED).ifState(STATE_INIT).then(() => {

@@ -71,7 +71,7 @@ function buildGrid(width, height) {
             const startCell = this.getCell(x, y);
             startCell.metadata.distance = 0;
             const frontier = [startCell];
-            let maxDistance = 0;
+            let maxDistance = 0, maxDistancePoint;
             while(frontier.length) {
                 const next = frontier.shift(),
                     frontierDistance = next.metadata.distance;
@@ -80,13 +80,45 @@ function buildGrid(width, height) {
                     neighbour.metadata.distance = frontierDistance + 1;
                 });
                 frontier.push(...linkedUndistancedNeighbours);
-                maxDistance = Math.max(frontierDistance+1, maxDistance);
+                if (linkedUndistancedNeighbours.length) {
+                    if (frontierDistance >= maxDistance) {
+                        maxDistancePoint = linkedUndistancedNeighbours[0];
+                    }
+                    maxDistance = Math.max(frontierDistance+1, maxDistance);
+                }
             }
             this.metadata.maxDistance = maxDistance;
+            if (maxDistancePoint) {
+                this.metadata.maxDistancePoint = {x: maxDistancePoint.x, y: maxDistancePoint.y};
+            } else {
+                delete this.metadata.maxDistancePoint;
+            }
         },
         clearMetadata() {
             this.forEachCell(cell => cell.metadata = {});
             this.metadata = {};
+        },
+        getDetails() {
+            const randomPoint = this.getRandomCell(cell => !cell.masked);
+            this.findDistancesFrom(randomPoint.x, randomPoint.y);
+            const startPointX = this.metadata.maxDistancePoint.x,
+                startPointY = this.metadata.maxDistancePoint.y;
+            this.findDistancesFrom(startPointX, startPointY);
+            const endPointX = this.metadata.maxDistancePoint.x,
+                endPointY = this.metadata.maxDistancePoint.y;
+
+            const cellCount = this.countCells(cell => !cell.masked),
+                deadEndCount = this.countCells(cell => !cell.masked && Object.values(cell.neighbours).filter(neighbour => neighbour.link).length === 1);
+
+            return {
+                cellCount,
+                maxDistance: this.metadata.maxDistance,
+                longestPath: {
+                    start: {x:startPointX, y:startPointY},
+                    finish: {x:endPointX, y:endPointY}
+                },
+                deadEnds: deadEndCount
+            };
         },
         filterCells(fnCriteria = () => true) {
             const matchingCells = [];

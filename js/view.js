@@ -30,7 +30,8 @@ function buildView(stateMachine, model) {
         elApplyMaskToggle = document.getElementById('applyMaskToggle'),
         elMaskNotSupported = document.getElementById('maskNotSupported'),
         elApplyMask = document.getElementById('applyMask'),
-        elInfo= document.getElementById('info'),
+        elInfo = document.getElementById('info'),
+        elDetails = document.getElementById('details'),
 
         ctx = elCanvas.getContext('2d'),
         CELL_SELECTED_COLOUR = '#006BB7',
@@ -207,6 +208,9 @@ function buildView(stateMachine, model) {
         togglelApplyMask(display) {
             toggleElementVisibility(elApplyMask, display);
         },
+        toggleDetails(display) {
+            toggleElementVisibility(elDetails, display);
+        },
         setMaskingAllowed(allowed) {
             toggleElementVisibility(elApplyMaskToggle, allowed);
             toggleElementVisibility(elMaskNotSupported, !allowed);
@@ -219,6 +223,9 @@ function buildView(stateMachine, model) {
         },
         showInfo(info) {
             elInfo.innerHTML = info;
+        },
+        showDetails(details) {
+            elDetails.innerHTML = details;
         },
         on(eventName) {
             return {

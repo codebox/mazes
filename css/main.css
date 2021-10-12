@@ -100,8 +100,12 @@ button {
 #maskNotSupported, #info {
     text-align: center;
 }
-div#info {
+div#info, div#details {
     margin-top: var(--wide-margin);
     background-color: white;
     padding: var(--wide-margin);
+}
+div#details em {
+    font-style: normal;
+    color: var(--alt-colour);
 }
