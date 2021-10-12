@@ -5,13 +5,15 @@ const EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
     EVENT_REFRESH_BUTTON_CLICKED = 'refreshButtonClicked',
     EVENT_CHANGE_MAZE_CONFIG_BUTTON_CLICKED = 'changeMazeConfigButtonClicked',
     EVENT_APPLY_MASK_CLICKED = 'applyMaskClicked',
+    EVENT_PLAY_CLICKED = 'playClicked',
     EVENT_MAZE_SIZE_SELECTED = 'mazeSizeSelected',
     EVENT_MAZE_ALGORITHM_SELECTED = 'mazeAlgorithmSelected',
     EVENT_MOUSE_MOVE = 'mouseMove',
     EVENT_MOUSE_MOVE_END = 'mouseMoveEnd',
     EVENT_MOUSE_CLICK = 'mouseClick',
     EVENT_RESIZE = 'resize',
-    EVENT_MOUSE_LEAVE = 'mouseLeave';
+    EVENT_MOUSE_LEAVE = 'mouseLeave',
+    EVENT_NAVIGATE = 'navigate';
 
 function buildView(stateMachine, model) {
     "use strict";
@@ -25,6 +27,7 @@ function buildView(stateMachine, model) {
         elMaskButton = document.getElementById('mask'),
         elSaveMaskButton = document.getElementById('saveMask'),
         elClearMaskButton = document.getElementById('clearMask'),
+        elPlayButton = document.getElementById('play'),
         elMazeSizeList = document.getElementById('sizeSelector'),
         elMazeAlgorithmList = document.getElementById('algorithmSelector'),
         elApplyMaskToggle = document.getElementById('applyMaskToggle'),
@@ -36,7 +39,10 @@ function buildView(stateMachine, model) {
         ctx = elCanvas.getContext('2d'),
         CELL_SELECTED_COLOUR = '#006BB7',
         CELL_DEFAULT_COLOUR = 'white',
-        CELL_MASKED_COLOUR = 'black';
+        CELL_MASKED_COLOUR = 'black',
+        CELL_VISITED_COLOUR = '#006BB755',
+        CELL_PLAYER_SYMBOL = 'P',
+        CELL_FINISH_SYMBOL = 'F';
 
     const renderer = (() => {
         const WALL_THICKNESS = 1, OFFSET = WALL_THICKNESS / 2;
@@ -52,8 +58,17 @@ function buildView(stateMachine, model) {
 
         function drawRectangle(x, y, colour) {
             ctx.moveTo(coord(x), coord(y));
+            const previousFillstyle = ctx.fillStyle;
             ctx.fillStyle = colour;
             ctx.fillRect(coord(x) - OFFSET, coord(y) - OFFSET, magnification + OFFSET, magnification + OFFSET);
+            ctx.fillStyle = previousFillstyle;
+        }
+
+        function drawText(x, y, text) {
+            const fontSize = 16,
+                cellSize = magnification;
+            ctx.font = `${fontSize}px Courier`;
+            ctx.fillText(text, coord(x) + (cellSize - fontSize), coord(y) + cellSize - (cellSize - fontSize) / 4);
         }
 
         let magnification;
@@ -74,6 +89,16 @@ function buildView(stateMachine, model) {
                         drawRectangle(x, y, stateMachine.state === STATE_MASKING ? CELL_MASKED_COLOUR : CELL_DEFAULT_COLOUR );
 
                     } else {
+                        if (cell.metadata.playerVisited || cell.metadata.player) {
+                            drawRectangle(x, y, CELL_VISITED_COLOUR);
+                        }
+                        if (cell.metadata.player) {
+                            drawText(x, y, CELL_PLAYER_SYMBOL);
+
+                        } else if (cell.metadata.finish) {
+                            drawText(x, y, CELL_FINISH_SYMBOL);
+                        }
+
                         if (!cell.neighbours.north.link) {
                             drawWall(x, y, x + 1, y);
                         }
@@ -123,6 +148,7 @@ function buildView(stateMachine, model) {
     elChangeMazeConfigButton.onclick = () => trigger(EVENT_CHANGE_MAZE_CONFIG_BUTTON_CLICKED);
     elRefreshButton.onclick = () => trigger(EVENT_REFRESH_BUTTON_CLICKED);
     elApplyMaskToggle.onclick = () => trigger(EVENT_APPLY_MASK_CLICKED);
+    elPlayButton.onclick = () => trigger(EVENT_PLAY_CLICKED);
 
     function triggerMouseEvent(mouseEvent, viewEventName) {
         const {x,y} = renderer.getMazeCoordsFromScreenCoords(mouseEvent.clientX, mouseEvent.clientY);
@@ -138,6 +164,34 @@ function buildView(stateMachine, model) {
     elCanvas.onclick = event => triggerMouseEvent(event, EVENT_MOUSE_CLICK);
     elCanvas.onmouseup = event => triggerMouseEvent(event, EVENT_MOUSE_MOVE_END);
     elCanvas.onmouseleave = event => trigger(EVENT_MOUSE_LEAVE);
+
+    window.onkeydown = event => {
+        const code = event.keyCode;
+
+        let x = 0, y = 0, direction;
+
+        if (code === 37) {
+            x = -1;
+            direction = 'west';
+
+        } else if (code === 39) {
+            x = 1;
+            direction = 'east';
+
+        } else if (code === 38) {
+            y = -1;
+            direction = 'north';
+
+        } else if (code === 40) {
+            y = 1;
+            direction = 'south';
+
+        } else {
+            return;
+        }
+
+        trigger(EVENT_NAVIGATE, {x, y, direction, shift: event.shiftKey, ctrl: event.ctrlKey});
+    };
 
     function fitCanvasToContainer() {
         const minSize = Math.min(elMazeContainer.clientWidth, elMazeContainer.clientHeight);
@@ -210,6 +264,9 @@ function buildView(stateMachine, model) {
         },
         toggleDetails(display) {
             toggleElementVisibility(elDetails, display);
+        },
+        togglePlayButton(display) {
+            toggleElementVisibility(elPlayButton, display);
         },
         setMaskingAllowed(allowed) {
             toggleElementVisibility(elApplyMaskToggle, allowed);

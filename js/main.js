@@ -40,7 +40,7 @@ window.onload = () => {
     });
 
     view.on(EVENT_RESIZE).then(() => {
-        renderMaze(false);
+        view.renderMaze(model.maze);
     });
 
     function updateUiMaskInputs() {
@@ -65,13 +65,14 @@ window.onload = () => {
         view.toggleChangeMazeConfigButton([STATE_DISPLAYING].includes(state));
         view.toggleMazeConfig([STATE_INIT].includes(state));
         view.toggleDetails([STATE_DISPLAYING].includes(state));
+        view.togglePlayButton([STATE_DISPLAYING].includes(state));
         updateUiMaskInputs();
 
         const infoMsg = {
             [STATE_INIT]: 'Click the GO button to create a maze',
             [STATE_DISPLAYING]: 'Click REFRESH to make a different maze<br><br>Hover over the maze to view a distance map',
             [STATE_MASKING]: 'Select squares on the grid to create a mask.<br><br>Hold down SHIFT to select a rectangle.<br><br>Masked squares will not be included in the maze',
-            [STATE_PLAYING]: ''
+            [STATE_PLAYING]: 'Use the cursor keys to guide the man to the exit<br><br>Hold down SHIFT to move as far as possible in a direction<br><br>Hold down CTRL and SHIFT to keep moving until the next junction'
         }[state];
         view.showInfo(infoMsg);
     }
@@ -202,6 +203,74 @@ window.onload = () => {
     view.on(EVENT_MOUSE_LEAVE).ifState(STATE_DISPLAYING).then(event => {
         model.maze.clearMetadata();
         view.renderMaze(model.maze);
+    });
+
+    function movePlayer(newCell) {
+        const currentCell = model.playState.cell;
+        delete currentCell.metadata.player;
+        currentCell.metadata.playerVisited = true;
+        newCell.metadata.player = true;
+        model.playState.cell = newCell;
+        view.renderMaze(model.maze);
+    }
+
+    view.on(EVENT_PLAY_CLICKED).ifState(STATE_DISPLAYING).then(event => {
+        stateMachine.playing();
+        model.maze.clearMetadata();
+
+        const details = model.maze.getDetails(),
+            startX = details.longestPath.start.x,
+            startY = details.longestPath.start.y,
+            endX = details.longestPath.finish.x,
+            endY = details.longestPath.finish.y;
+
+        model.playState = {
+            cell: model.maze.getCell(startX, startY)
+        };
+        model.maze.getCell(endX, endY).metadata.finish = true;
+        updateUiForNewState();
+        movePlayer(model.playState.cell);
+    });
+
+    view.on(EVENT_NAVIGATE).ifState(STATE_PLAYING).then(event => {
+        const {x,y} = event.data;
+        let moveOk, direction = event.data.direction;
+
+        function getAvailableDirections() {
+            return Object.entries(model.playState.cell.neighbours).filter(entry => entry[1].link).map(entry => entry[0]);
+        }
+        function getBackDirection(direction) {
+            return {
+                'north': 'south',
+                'south': 'north',
+                'east': 'west',
+                'west': 'east'
+            }[direction];
+        }
+
+        while(true) {
+            moveOk = model.playState.cell.neighbours[direction].link;
+            if (moveOk) {
+                movePlayer(model.playState.cell.neighbours[direction].cell);
+                if (event.data.shift) {
+                    if (event.data.ctrl) {
+                        const availableDirections = getAvailableDirections();
+                        if (availableDirections.length === 2) {
+                            const backDirection = getBackDirection(direction);
+                            direction = availableDirections.find(dir => dir !== backDirection);
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+
+        }
+
     });
 
     updateUiForNewState();

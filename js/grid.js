@@ -107,12 +107,15 @@ function buildGrid(width, height) {
             const endPointX = this.metadata.maxDistancePoint.x,
                 endPointY = this.metadata.maxDistancePoint.y;
 
-            const cellCount = this.countCells(cell => !cell.masked),
+            const maxDistance = this.metadata.maxDistance,
+                cellCount = this.countCells(cell => !cell.masked),
                 deadEndCount = this.countCells(cell => !cell.masked && Object.values(cell.neighbours).filter(neighbour => neighbour.link).length === 1);
+
+            this.clearMetadata();
 
             return {
                 cellCount,
-                maxDistance: this.metadata.maxDistance,
+                maxDistance,
                 longestPath: {
                     start: {x:startPointX, y:startPointY},
                     finish: {x:endPointX, y:endPointY}
