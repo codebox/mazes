@@ -10,7 +10,8 @@ const EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
     EVENT_MOUSE_MOVE = 'mouseMove',
     EVENT_MOUSE_MOVE_END = 'mouseMoveEnd',
     EVENT_MOUSE_CLICK = 'mouseClick',
-    EVENT_RESIZE = 'resize';
+    EVENT_RESIZE = 'resize',
+    EVENT_MOUSE_LEAVE = 'mouseLeave';
 
 function buildView(stateMachine, model) {
     "use strict";
@@ -51,7 +52,7 @@ function buildView(stateMachine, model) {
         function drawRectangle(x, y, colour) {
             ctx.moveTo(coord(x), coord(y));
             ctx.fillStyle = colour;
-            ctx.fillRect(coord(x), coord(y), magnification, magnification);
+            ctx.fillRect(coord(x) - OFFSET, coord(y) - OFFSET, magnification + OFFSET, magnification + OFFSET);
         }
 
         let magnification;
@@ -72,11 +73,6 @@ function buildView(stateMachine, model) {
                         drawRectangle(x, y, stateMachine.state === STATE_MASKING ? CELL_MASKED_COLOUR : CELL_DEFAULT_COLOUR );
 
                     } else {
-                        if (maze.metadata.maxDistance) {
-                            const distance = cell.metadata.distance / maze.metadata.maxDistance,
-                                colour = `hsl(${Math.floor(100 - 100 * distance)}, 100%, 50%)`;
-                            drawRectangle(x, y, colour);
-                        }
                         if (!cell.neighbours.north.link) {
                             drawWall(x, y, x + 1, y);
                         }
@@ -88,6 +84,11 @@ function buildView(stateMachine, model) {
                         }
                         if (!cell.neighbours.west.link) {
                             drawWall(x, y, x, y + 1);
+                        }
+                        if (maze.metadata.maxDistance) {
+                            const distance = cell.metadata.distance / maze.metadata.maxDistance,
+                                colour = `hsl(${Math.floor(100 - 100 * distance)}, 100%, 50%)`;
+                            drawRectangle(x, y, colour);
                         }
                     }
                 });
@@ -134,7 +135,8 @@ function buildView(stateMachine, model) {
     }
     elCanvas.onmousemove = elCanvas.onmousedown = event => triggerMouseEvent(event, EVENT_MOUSE_MOVE);
     elCanvas.onclick = event => triggerMouseEvent(event, EVENT_MOUSE_CLICK);
-    elCanvas.onmouseup = elCanvas.onmouseout = event => triggerMouseEvent(event, EVENT_MOUSE_MOVE_END);
+    elCanvas.onmouseup = event => triggerMouseEvent(event, EVENT_MOUSE_MOVE_END);
+    elCanvas.onmouseleave = event => trigger(EVENT_MOUSE_LEAVE);
 
     function fitCanvasToContainer() {
         const minSize = Math.min(elMazeContainer.clientWidth, elMazeContainer.clientHeight);

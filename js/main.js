@@ -68,7 +68,7 @@ window.onload = () => {
 
         const infoMsg = {
             [STATE_INIT]: 'Click the GO button to create a maze',
-            [STATE_DISPLAYING]: 'Click REFRESH to make a different maze',
+            [STATE_DISPLAYING]: 'Click REFRESH to make a different maze<br><br>Hover over the maze to view a distance map',
             [STATE_MASKING]: 'Select squares on the grid to create a mask.<br><br>Hold down SHIFT to select a rectangle.<br><br>Masked squares will not be included in the maze',
             [STATE_PLAYING]: ''
         }[state];
@@ -168,6 +168,11 @@ window.onload = () => {
         view.renderMaze(model.maze);
     });
 
+    view.on(EVENT_MOUSE_MOVE).ifState(STATE_DISPLAYING).then(event => {
+        model.maze.findDistancesFrom(event.data.x, event.data.y);
+        view.renderMaze(model.maze);
+    });
+
     view.on(EVENT_MOUSE_MOVE_END).ifState(STATE_MASKING).then(event => {
         model.maze.forEachCell(cell => {
             if (cell.metadata.selected) {
@@ -182,6 +187,11 @@ window.onload = () => {
         model.masks.getCurrent().setFromModel();
         view.renderMaze(model.maze);
         delete model.mouseDragStart;
+    });
+
+    view.on(EVENT_MOUSE_LEAVE).ifState(STATE_DISPLAYING).then(event => {
+        model.maze.clearMetadata();
+        view.renderMaze(model.maze);
     });
 
     updateUiForNewState();
