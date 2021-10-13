@@ -47,6 +47,8 @@ function buildView(stateMachine, model) {
         CELL_SELECTED_COLOUR = '#006BB7',
         CELL_DEFAULT_COLOUR = 'white',
         CELL_MASKED_COLOUR = 'black',
+        SOLUTION_PATH_COLOUR = '#aaa',
+        WALL_COLOUR = 'black',
         CELL_VISITED_COLOUR = '#006BB722';
 
     imgPlayer.src = "images/player.png";
@@ -60,27 +62,105 @@ function buildView(stateMachine, model) {
         }
 
         function drawWall(x0, y0, x1, y1) {
+            ctx.strokeStyle = WALL_COLOUR;
+            ctx.beginPath();
             ctx.moveTo(coord(x0), coord(y0));
             ctx.lineTo(coord(x1), coord(y1));
+            ctx.stroke();
         }
 
         function drawRectangle(x, y, colour) {
-            ctx.moveTo(coord(x), coord(y));
-            const previousFillstyle = ctx.fillStyle;
             ctx.fillStyle = colour;
+            ctx.beginPath();
+            ctx.moveTo(coord(x), coord(y));
             ctx.fillRect(coord(x) - OFFSET, coord(y) - OFFSET, magnification + OFFSET, magnification + OFFSET);
-            ctx.fillStyle = previousFillstyle;
+            ctx.stroke();
         }
 
         function drawText(x, y, text) {
             const fontSize = 16,
                 cellSize = magnification;
             ctx.font = `${fontSize}px Courier`;
+            ctx.beginPath();
             ctx.fillText(text, coord(x) + (cellSize - fontSize), coord(y) + cellSize - (cellSize - fontSize) / 4);
+            ctx.stroke();
         }
 
         function drawImage(x, y, img) {
             ctx.drawImage(img, coord(x), coord(y), magnification, magnification);
+        }
+
+        function drawDirectionArrows(x, y, arrows) {
+            const l1 = magnification / 4,
+                l2 = magnification / 8,
+                [inArrow, outArrow] = arrows.split(''),
+                xCoordCenter = coord(x) + magnification / 2,
+                yCoordCenter = coord(y) + magnification / 2;
+
+            function drawArrow(side, inComing) {
+                const reflection = inComing ? 1 : -1;
+                let xc, yc, x1, y1, x2, y2, x3, y3, x4, y4;
+
+                if (side === 'n') {
+                    xc = xCoordCenter;
+                    yc = yCoordCenter - magnification / 4;
+                    x1 = xc - l1/2;
+                    y1 = yc - reflection * l2/2;
+                    x2 = xc;
+                    y2 = yc + reflection * l2/2;
+                    x3 = xc + l1/2;
+                    y3 = yc - reflection * l2/2;
+                    x4 = xCoordCenter;
+                    y4 = yCoordCenter - magnification / 2;
+
+                } else if (side === 's') {
+                    xc = xCoordCenter;
+                    yc = yCoordCenter + magnification / 4;
+                    x1 = xc - l1/2;
+                    y1 = yc + reflection * l2/2;
+                    x2 = xc;
+                    y2 = yc - reflection * l2/2;
+                    x3 = xc + l1/2;
+                    y3 = yc + reflection * l2/2;
+                    x4 = xCoordCenter;
+                    y4 = yCoordCenter + magnification/2;
+
+                } else if (side === 'w') {
+                    xc = xCoordCenter - magnification / 4;
+                    yc = yCoordCenter;
+                    x1 = xc - reflection * l2/2;
+                    y1 = yc - l1/2;
+                    x2 = xc + reflection * l2/2;
+                    y2 = yc;
+                    x3 = xc - reflection * l2/2;
+                    y3 = yc + l1/2;
+                    x4 = xCoordCenter - magnification/2;
+                    y4 = yCoordCenter;
+
+                } else if (side === 'e') {
+                    xc = xCoordCenter + magnification / 4;
+                    yc = yCoordCenter;
+                    x1 = xc + reflection * l2/2;
+                    y1 = yc - l1/2;
+                    x2 = xc - reflection * l2/2;
+                    y2 = yc;
+                    x3 = xc + reflection * l2/2;
+                    y3 = yc + l1/2;
+                    x4 = xCoordCenter + magnification/2;
+                    y4 = yCoordCenter;
+                }
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x3, y3);
+                ctx.moveTo(x4, y4);
+                ctx.lineTo(xCoordCenter, yCoordCenter);
+
+            }
+            ctx.strokeStyle = SOLUTION_PATH_COLOUR;
+            ctx.beginPath();
+            drawArrow(inArrow, true);
+            drawArrow(outArrow, false);
+            ctx.stroke();
         }
 
         let magnification;
@@ -90,7 +170,6 @@ function buildView(stateMachine, model) {
                 magnification = Math.round((elCanvas.width - WALL_THICKNESS * (maze.width + 1))/ maze.width);
 
                 ctx.clearRect(0, 0, elCanvas.width, elCanvas.height);
-                ctx.beginPath();
                 ctx.lineWidth = WALL_THICKNESS;
 
                 maze.forEachCell((cell, x, y) => {
@@ -103,6 +182,9 @@ function buildView(stateMachine, model) {
                     } else {
                         if (cell.metadata.playerVisited || cell.metadata.player) {
                             drawRectangle(x, y, CELL_VISITED_COLOUR);
+                        }
+                        if (cell.metadata.solution) {
+                            drawDirectionArrows(x, y, cell.metadata.solution);
                         }
                         if (cell.metadata.player) {
                             drawImage(x, y, imgPlayer);
@@ -130,8 +212,6 @@ function buildView(stateMachine, model) {
                         }
                     }
                 });
-
-                ctx.stroke();
             },
             getMazeCoordsFromScreenCoords(screenX, screenY) {
                 const rect = elCanvas.getBoundingClientRect(),

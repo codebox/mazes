@@ -266,11 +266,34 @@ window.onload = () => {
     });
 
     view.on(EVENT_SOLUTION_CLICKED).ifState(STATE_PLAYING).then(event => {
-        clearInterval(model.playState.timer);
-        model.maze.forEachCell(cell => delete cell.metadata.playerVisited);
         const route = model.maze.findRoute(model.playState.start, model.playState.end)
-        route.forEach(location => {
-            model.maze.getCell(location.x, location.y).metadata.playerVisited = true;
+        route.forEach((current, i) => {
+            const previous = route[i - 1],
+                next = route[i + 1];
+            let arrows = '';
+            if (previous) {
+                if (current.x > previous.x) {
+                    arrows += 'w';
+                } else if (current.x < previous.x) {
+                    arrows += 'e';
+                } else if (current.y > previous.y) {
+                    arrows += 'n';
+                } else if (current.y < previous.y) {
+                    arrows += 's';
+                }
+            }
+            if (next) {
+                if (current.x > next.x) {
+                    arrows += 'w';
+                } else if (current.x < next.x) {
+                    arrows += 'e';
+                } else if (current.y > next.y) {
+                    arrows += 'n';
+                } else if (current.y < next.y) {
+                    arrows += 's';
+                }
+            }
+            model.maze.getCell(current.x, current.y).metadata.solution = arrows;
         });
         model.maze.getCell(model.playState.start.x, model.playState.start.y).metadata.player = true;
         model.maze.getCell(model.playState.end.x, model.playState.end.y).metadata.finish = true;
@@ -300,16 +323,14 @@ window.onload = () => {
                 visitedCells = model.maze.filterCells(cell => cell.metadata.playerVisited).reduce((total, cell) => total + cell.metadata.playerVisited ,0),
                 details = model.maze.getDetails(),
                 optimalRouteLength = details.maxDistance,
-                cellsPerSecond = optimalRouteLength / (elaspedTimeMillis / 1000),
-                deviationPenalty = Math.pow(optimalRouteLength, 2) / Math.pow(visitedCells, 2),
-                sizeBonus = Math.pow(model.size, 1.2),
-                score = Math.round(cellsPerSecond * deviationPenalty * sizeBonus);
-                console.log(cellsPerSecond , deviationPenalty, sizeBonus);
+                cellsPerSecond = optimalRouteLength / (elaspedTimeMillis / 1000);
+
             view.showDetails(`
-                Score: <em><b>${score}</b></em><br><br>
                 Finish Time: ${elapsedTime}<br>
-                Visited: ${visitedCells}<br>
-                Optimal: ${optimalRouteLength}<br>
+                Visited Cells: ${visitedCells}<br>
+                Optimal Route: ${optimalRouteLength}<br><br>
+                Optimality: <em>${Math.floor(100 * optimalRouteLength / visitedCells)}%</em><br>
+                Cells per Second: <em>${Math.round(cellsPerSecond)}</em>
             `);
         }
 
