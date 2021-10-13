@@ -36,13 +36,17 @@ function buildView(stateMachine, model) {
         elInfo = document.getElementById('info'),
         elDetails = document.getElementById('details'),
 
+        imgPlayer = new Image(),
+        imgExit = new Image(),
+
         ctx = elCanvas.getContext('2d'),
         CELL_SELECTED_COLOUR = '#006BB7',
         CELL_DEFAULT_COLOUR = 'white',
         CELL_MASKED_COLOUR = 'black',
-        CELL_VISITED_COLOUR = '#006BB755',
-        CELL_PLAYER_SYMBOL = 'P',
-        CELL_FINISH_SYMBOL = 'F';
+        CELL_VISITED_COLOUR = '#006BB722';
+
+    imgPlayer.src = "images/player.png";
+    imgExit.src = "images/finish.png";
 
     const renderer = (() => {
         const WALL_THICKNESS = 1, OFFSET = WALL_THICKNESS / 2;
@@ -71,6 +75,10 @@ function buildView(stateMachine, model) {
             ctx.fillText(text, coord(x) + (cellSize - fontSize), coord(y) + cellSize - (cellSize - fontSize) / 4);
         }
 
+        function drawImage(x, y, img) {
+            ctx.drawImage(img, coord(x), coord(y), magnification, magnification);
+        }
+
         let magnification;
 
         return {
@@ -93,10 +101,10 @@ function buildView(stateMachine, model) {
                             drawRectangle(x, y, CELL_VISITED_COLOUR);
                         }
                         if (cell.metadata.player) {
-                            drawText(x, y, CELL_PLAYER_SYMBOL);
+                            drawImage(x, y, imgPlayer);
 
                         } else if (cell.metadata.finish) {
-                            drawText(x, y, CELL_FINISH_SYMBOL);
+                            drawImage(x, y, imgExit);
                         }
 
                         if (!cell.neighbours.north.link) {
