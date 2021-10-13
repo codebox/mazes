@@ -268,11 +268,14 @@ window.onload = () => {
     view.on(EVENT_SOLUTION_CLICKED).ifState(STATE_PLAYING).then(event => {
         clearInterval(model.playState.timer);
         model.maze.forEachCell(cell => delete cell.metadata.playerVisited);
-        model.maze.findRoute(model.playState.start, model.playState.end).forEach(location => {
+        const route = model.maze.findRoute(model.playState.start, model.playState.end)
+        route.forEach(location => {
             model.maze.getCell(location.x, location.y).metadata.playerVisited = true;
         });
         model.maze.getCell(model.playState.start.x, model.playState.start.y).metadata.player = true;
         model.maze.getCell(model.playState.end.x, model.playState.end.y).metadata.finish = true;
+        view.showDetails(`Optimal Path: <em>${route.length}</em>`);
+        view.toggleSolutionButton(false);
         view.renderMaze(model.maze);
     });
 
@@ -296,11 +299,17 @@ window.onload = () => {
                 elapsedTime = formatTime(elaspedTimeMillis),
                 visitedCells = model.maze.filterCells(cell => cell.metadata.playerVisited).reduce((total, cell) => total + cell.metadata.playerVisited ,0),
                 details = model.maze.getDetails(),
-                optimalRouteLength = details.maxDistance;
+                optimalRouteLength = details.maxDistance,
+                cellsPerSecond = optimalRouteLength / (elaspedTimeMillis / 1000),
+                deviationPenalty = Math.pow(optimalRouteLength, 2) / Math.pow(visitedCells, 2),
+                sizeBonus = Math.pow(model.size, 1.2),
+                score = Math.round(cellsPerSecond * deviationPenalty * sizeBonus);
+                console.log(cellsPerSecond , deviationPenalty, sizeBonus);
             view.showDetails(`
+                Score: <em><b>${score}</b></em><br><br>
                 Finish Time: ${elapsedTime}<br>
                 Visited: ${visitedCells}<br>
-                Optimal: ${optimalRouteLength}
+                Optimal: ${optimalRouteLength}<br>
             `);
         }
 
