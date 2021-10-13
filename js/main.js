@@ -66,6 +66,8 @@ window.onload = () => {
         view.toggleMazeConfig([STATE_INIT].includes(state));
         view.toggleDetails([STATE_DISPLAYING, STATE_PLAYING].includes(state));
         view.togglePlayButton([STATE_DISPLAYING].includes(state));
+        view.toggleQuitButton([STATE_PLAYING].includes(state));
+        view.toggleSolutionButton([STATE_PLAYING].includes(state));
         updateUiMaskInputs();
 
         const infoMsg = {
@@ -86,6 +88,15 @@ window.onload = () => {
         });
     }
 
+    function showMazeDetails() {
+        const details = model.maze.getDetails();
+
+        view.showDetails(`
+                Cells: <em>${details.cellCount}</em><br>
+                Longest Path: <em>${details.maxDistance}</em><br>
+                Dead Ends: <em>${details.deadEnds}</em><br>
+            `);
+    }
     function renderMaze(applyAlgorithm) {
         const grid = buildGrid(model.size, model.size);
         if (model.algorithm.maskable && model.applyMask) {
@@ -94,13 +105,7 @@ window.onload = () => {
         const maze = applyAlgorithm ? algorithms[model.algorithm.function](grid) : grid;
         view.renderMaze(model.maze = maze);
         if (applyAlgorithm) {
-            const details = model.maze.getDetails();
-
-            view.showDetails(`
-                Cells: <em>${details.cellCount}</em><br>
-                Longest Path: <em>${details.maxDistance}</em><br>
-                Dead Ends: <em>${details.deadEnds}</em><br>
-            `);
+            showMazeDetails();
         }
     }
 
@@ -231,7 +236,9 @@ window.onload = () => {
             endY = details.longestPath.finish.y;
 
         model.playState = {
-            cell: model.maze.getCell(startX, startY)
+            cell: model.maze.getCell(startX, startY),
+            start: {x: startX, y: startY},
+            end: {x: endX, y: endY}
         };
         model.maze.getCell(endX, endY).metadata.finish = true;
         updateUiForNewState();
@@ -249,8 +256,27 @@ window.onload = () => {
         }, 1000);
     });
 
+    view.on(EVENT_QUIT_CLICKED).ifState(STATE_PLAYING).then(event => {
+        clearInterval(model.playState.timer);
+        model.maze.clearMetadata();
+        showMazeDetails();
+        view.renderMaze(model.maze);
+        stateMachine.displaying();
+        updateUiForNewState();
+    });
+
+    view.on(EVENT_SOLUTION_CLICKED).ifState(STATE_PLAYING).then(event => {
+        clearInterval(model.playState.timer);
+        model.maze.forEachCell(cell => delete cell.metadata.playerVisited);
+        model.maze.findRoute(model.playState.start, model.playState.end).forEach(location => {
+            model.maze.getCell(location.x, location.y).metadata.playerVisited = true;
+        });
+        model.maze.getCell(model.playState.start.x, model.playState.start.y).metadata.player = true;
+        model.maze.getCell(model.playState.end.x, model.playState.end.y).metadata.finish = true;
+        view.renderMaze(model.maze);
+    });
+
     view.on(EVENT_NAVIGATE).ifState(STATE_PLAYING).then(event => {
-        const {x,y} = event.data;
         let moveOk, direction = event.data.direction;
 
         function getAvailableDirections() {

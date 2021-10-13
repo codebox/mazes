@@ -94,6 +94,26 @@ function buildGrid(width, height) {
                 delete this.metadata.maxDistancePoint;
             }
         },
+        findRoute(startPosition, endPosition) {
+            const start = this.getCell(startPosition.x, startPosition.y),
+                end = this.getCell(endPosition.x, endPosition.y);
+
+            this.findDistancesFrom(endPosition.x, endPosition.y);
+
+            let current = start,
+                route = [current];
+
+            while (current !== end) {
+                const currentDist = current.metadata.distance,
+                    next = current.filterNeighbours((cell, link) => link).find(cell => cell.metadata.distance === currentDist - 1);
+                route.push(current = next);
+            }
+
+            this.clearMetadata();
+            return route.map(cell => {
+                return {x:cell.x, y:cell.y};
+            });
+        },
         clearMetadata() {
             this.forEachCell(cell => cell.metadata = {});
             this.metadata = {};

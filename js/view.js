@@ -6,6 +6,8 @@ const EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
     EVENT_CHANGE_MAZE_CONFIG_BUTTON_CLICKED = 'changeMazeConfigButtonClicked',
     EVENT_APPLY_MASK_CLICKED = 'applyMaskClicked',
     EVENT_PLAY_CLICKED = 'playClicked',
+    EVENT_QUIT_CLICKED = 'quitClicked',
+    EVENT_SOLUTION_CLICKED = 'solutionClicked',
     EVENT_MAZE_SIZE_SELECTED = 'mazeSizeSelected',
     EVENT_MAZE_ALGORITHM_SELECTED = 'mazeAlgorithmSelected',
     EVENT_MOUSE_MOVE = 'mouseMove',
@@ -35,6 +37,8 @@ function buildView(stateMachine, model) {
         elApplyMask = document.getElementById('applyMask'),
         elInfo = document.getElementById('info'),
         elDetails = document.getElementById('details'),
+        elQuitButton = document.getElementById('quit'),
+        elSolutionButton = document.getElementById('solution'),
 
         imgPlayer = new Image(),
         imgExit = new Image(),
@@ -157,6 +161,8 @@ function buildView(stateMachine, model) {
     elRefreshButton.onclick = () => trigger(EVENT_REFRESH_BUTTON_CLICKED);
     elApplyMaskToggle.onclick = () => trigger(EVENT_APPLY_MASK_CLICKED);
     elPlayButton.onclick = () => trigger(EVENT_PLAY_CLICKED);
+    elQuitButton.onclick = () => trigger(EVENT_QUIT_CLICKED);
+    elSolutionButton.onclick = () => trigger(EVENT_SOLUTION_CLICKED);
 
     function triggerMouseEvent(mouseEvent, viewEventName) {
         const {x,y} = renderer.getMazeCoordsFromScreenCoords(mouseEvent.clientX, mouseEvent.clientY);
@@ -274,6 +280,12 @@ function buildView(stateMachine, model) {
         },
         togglePlayButton(display) {
             toggleElementVisibility(elPlayButton, display);
+        },
+        toggleQuitButton(display) {
+            toggleElementVisibility(elQuitButton, display);
+        },
+        toggleSolutionButton(display) {
+            toggleElementVisibility(elSolutionButton, display);
         },
         setMaskingAllowed(allowed) {
             toggleElementVisibility(elApplyMaskToggle, allowed);
