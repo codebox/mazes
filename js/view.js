@@ -77,15 +77,6 @@ function buildView(stateMachine, model) {
             ctx.stroke();
         }
 
-        function drawText(x, y, text) {
-            const fontSize = 16,
-                cellSize = magnification;
-            ctx.font = `${fontSize}px Courier`;
-            ctx.beginPath();
-            ctx.fillText(text, coord(x) + (cellSize - fontSize), coord(y) + cellSize - (cellSize - fontSize) / 4);
-            ctx.stroke();
-        }
-
         function drawImage(x, y, img) {
             ctx.drawImage(img, coord(x), coord(y), magnification, magnification);
         }
@@ -172,44 +163,46 @@ function buildView(stateMachine, model) {
                 ctx.clearRect(0, 0, elCanvas.width, elCanvas.height);
                 ctx.lineWidth = WALL_THICKNESS;
 
-                maze.forEachCell((cell, x, y) => {
+                maze.filterCells(cell => cell.masked).forEach(cell => {
+                    drawRectangle(cell.x, cell.y, stateMachine.state === STATE_MASKING ? CELL_MASKED_COLOUR : CELL_DEFAULT_COLOUR);
+                });
+
+                maze.filterCells(cell => !cell.masked).forEach(cell => {
+                    const {x,y} = cell;
                     if (cell.metadata.selected) {
                         drawRectangle(x, y, CELL_SELECTED_COLOUR);
+                    }
 
-                    } else if (cell.masked) {
-                        drawRectangle(x, y, stateMachine.state === STATE_MASKING ? CELL_MASKED_COLOUR : CELL_DEFAULT_COLOUR );
+                    if (maze.metadata.maxDistance) {
+                        const distance = cell.metadata.distance / maze.metadata.maxDistance,
+                            colour = `hsl(${Math.floor(100 - 100 * distance)}, 100%, 50%)`;
+                        drawRectangle(x, y, colour);
+                    }
+                    if (cell.metadata.playerVisited || cell.metadata.player) {
+                        drawRectangle(x, y, CELL_VISITED_COLOUR);
+                    }
 
-                    } else {
-                        if (cell.metadata.playerVisited || cell.metadata.player) {
-                            drawRectangle(x, y, CELL_VISITED_COLOUR);
-                        }
-                        if (cell.metadata.solution) {
-                            drawDirectionArrows(x, y, cell.metadata.solution);
-                        }
-                        if (cell.metadata.player) {
-                            drawImage(x, y, imgPlayer);
+                    if (cell.metadata.solution) {
+                        drawDirectionArrows(x, y, cell.metadata.solution);
+                    }
 
-                        } else if (cell.metadata.finish) {
-                            drawImage(x, y, imgExit);
-                        }
+                    if (cell.metadata.player) {
+                        drawImage(x, y, imgPlayer);
+                    } else if (cell.metadata.finish) {
+                        drawImage(x, y, imgExit);
+                    }
 
-                        if (!cell.neighbours.north.link) {
-                            drawWall(x, y, x + 1, y);
-                        }
-                        if (!cell.neighbours.east.link) {
-                            drawWall(x + 1, y, x + 1, y + 1);
-                        }
-                        if (!cell.neighbours.south.link) {
-                            drawWall(x, y + 1, x + 1, y + 1);
-                        }
-                        if (!cell.neighbours.west.link) {
-                            drawWall(x, y, x, y + 1);
-                        }
-                        if (maze.metadata.maxDistance) {
-                            const distance = cell.metadata.distance / maze.metadata.maxDistance,
-                                colour = `hsl(${Math.floor(100 - 100 * distance)}, 100%, 50%)`;
-                            drawRectangle(x, y, colour);
-                        }
+                    if (!cell.neighbours.north.link) {
+                        drawWall(x, y, x + 1, y);
+                    }
+                    if (!cell.neighbours.east.link) {
+                        drawWall(x + 1, y, x + 1, y + 1);
+                    }
+                    if (!cell.neighbours.south.link) {
+                        drawWall(x, y + 1, x + 1, y + 1);
+                    }
+                    if (!cell.neighbours.west.link) {
+                        drawWall(x, y, x, y + 1);
                     }
                 });
             },

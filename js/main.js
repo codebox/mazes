@@ -266,7 +266,11 @@ window.onload = () => {
     });
 
     view.on(EVENT_SOLUTION_CLICKED).ifState(STATE_PLAYING).then(event => {
-        const route = model.maze.findRoute(model.playState.start, model.playState.end)
+        const playerVisitedCells = model.maze.filterCells(cell => cell.metadata.playerVisited),
+            route = model.maze.findRoute(model.playState.start, model.playState.end);
+
+        playerVisitedCells.forEach(cell => cell.metadata.playerVisited = true);
+
         route.forEach((current, i) => {
             const previous = route[i - 1],
                 next = route[i + 1];
@@ -318,6 +322,8 @@ window.onload = () => {
         }
         function mazeCompleted() {
             clearInterval(model.playState.timer);
+            const playerVisitedCells = model.maze.filterCells(cell => cell.metadata.playerVisited);
+
             const elaspedTimeMillis = Date.now() - model.playState.timerStart,
                 elapsedTime = formatTime(elaspedTimeMillis),
                 visitedCells = model.maze.filterCells(cell => cell.metadata.playerVisited).reduce((total, cell) => total + cell.metadata.playerVisited ,0),
@@ -325,6 +331,7 @@ window.onload = () => {
                 optimalRouteLength = details.maxDistance,
                 cellsPerSecond = optimalRouteLength / (elaspedTimeMillis / 1000);
 
+            playerVisitedCells.forEach(cell => cell.metadata.playerVisited = true);
             view.showDetails(`
                 Finish Time: ${elapsedTime}<br>
                 Visited Cells: ${visitedCells}<br>
