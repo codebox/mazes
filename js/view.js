@@ -270,7 +270,7 @@ function buildView(stateMachine, model) {
         trigger(EVENT_MOUSE_MOVE_END);
     };
     elCanvas.onmouseup = event => triggerMouseEvent(event, EVENT_MOUSE_MOVE_END);
-    elCanvas.onmouseleave = event => trigger(event, EVENT_MOUSE_LEAVE);
+    elCanvas.onmouseleave = event => trigger(EVENT_MOUSE_LEAVE);
 
     function handleCanvasClick(x, y) {
         if (x !== null && y !== null && model.playState) {
