@@ -68,6 +68,7 @@ window.onload = () => {
         view.togglePlayButton([STATE_DISPLAYING].includes(state));
         view.toggleQuitButton([STATE_PLAYING].includes(state));
         view.toggleSolutionButton([STATE_PLAYING].includes(state));
+        view.toggleDownloadButton([STATE_PLAYING, STATE_DISPLAYING].includes(state));
         updateUiMaskInputs();
 
         const infoMsg = {
@@ -370,6 +371,14 @@ window.onload = () => {
 
         }
 
+    });
+
+    view.on(EVENT_DOWNLOAD).then(event => {
+        const dataUrl = view.getCanvasAsDataUrl(),
+            link = document.createElement('a');
+        link.setAttribute('download', `maze_${model.size}x${model.size}_${Date.now()}.png`);
+        link.setAttribute('href', dataUrl);
+        link.click();
     });
 
     updateUiForNewState();

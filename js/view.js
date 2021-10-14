@@ -15,7 +15,8 @@ const EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
     EVENT_MOUSE_CLICK = 'mouseClick',
     EVENT_RESIZE = 'resize',
     EVENT_MOUSE_LEAVE = 'mouseLeave',
-    EVENT_NAVIGATE = 'navigate';
+    EVENT_NAVIGATE = 'navigate',
+    EVENT_DOWNLOAD = 'download';
 
 function buildView(stateMachine, model) {
     "use strict";
@@ -39,6 +40,7 @@ function buildView(stateMachine, model) {
         elDetails = document.getElementById('details'),
         elQuitButton = document.getElementById('quit'),
         elSolutionButton = document.getElementById('solution'),
+        elDownloadButton = document.getElementById('downloadMaze'),
 
         imgPlayer = new Image(),
         imgExit = new Image(),
@@ -164,7 +166,11 @@ function buildView(stateMachine, model) {
                 ctx.lineWidth = WALL_THICKNESS;
 
                 maze.filterCells(cell => cell.masked).forEach(cell => {
-                    drawRectangle(cell.x, cell.y, stateMachine.state === STATE_MASKING ? CELL_MASKED_COLOUR : CELL_DEFAULT_COLOUR);
+                    if (cell.metadata.selected) {
+                        drawRectangle(cell.x, cell.y, CELL_SELECTED_COLOUR);
+                    } else {
+                        drawRectangle(cell.x, cell.y, stateMachine.state === STATE_MASKING ? CELL_MASKED_COLOUR : CELL_DEFAULT_COLOUR);
+                    }
                 });
 
                 maze.filterCells(cell => !cell.masked).forEach(cell => {
@@ -236,6 +242,7 @@ function buildView(stateMachine, model) {
     elPlayButton.onclick = () => trigger(EVENT_PLAY_CLICKED);
     elQuitButton.onclick = () => trigger(EVENT_QUIT_CLICKED);
     elSolutionButton.onclick = () => trigger(EVENT_SOLUTION_CLICKED);
+    elDownloadButton.onclick = () => trigger(EVENT_DOWNLOAD);
 
     function triggerMouseEvent(mouseEvent, viewEventName) {
         const {x,y} = renderer.getMazeCoordsFromScreenCoords(mouseEvent.clientX, mouseEvent.clientY);
@@ -255,7 +262,7 @@ function buildView(stateMachine, model) {
     window.onkeydown = event => {
         const code = event.keyCode;
 
-        let x = 0, y = 0, direction;
+        let x = 0, y = 0, direction, download;
 
         if (code === 37) {
             x = -1;
@@ -273,11 +280,18 @@ function buildView(stateMachine, model) {
             y = 1;
             direction = 'south';
 
+        } else if (code === 68) { // 'd'
+            download = true;
+
         } else {
             return;
         }
 
-        trigger(EVENT_NAVIGATE, {x, y, direction, shift: event.shiftKey, ctrl: event.ctrlKey});
+        if (direction) {
+            trigger(EVENT_NAVIGATE, {x, y, direction, shift: event.shiftKey, ctrl: event.ctrlKey});
+        } else if (download) {
+            trigger(EVENT_DOWNLOAD);
+        }
     };
 
     function fitCanvasToContainer() {
@@ -357,6 +371,9 @@ function buildView(stateMachine, model) {
         toggleQuitButton(display) {
             toggleElementVisibility(elQuitButton, display);
         },
+        toggleDownloadButton(display) {
+            toggleElementVisibility(elDownloadButton, display);
+        },
         toggleSolutionButton(display) {
             toggleElementVisibility(elSolutionButton, display);
         },
@@ -393,6 +410,9 @@ function buildView(stateMachine, model) {
                     };
                 }
             };
+        },
+        getCanvasAsDataUrl() {
+            return elCanvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
         }
     };
 }
