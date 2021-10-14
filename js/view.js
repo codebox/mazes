@@ -15,6 +15,7 @@ const EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
     EVENT_MOUSE_CLICK = 'mouseClick',
     EVENT_RESIZE = 'resize',
     EVENT_MOUSE_LEAVE = 'mouseLeave',
+    EVENT_TOUCH = 'touch',
     EVENT_NAVIGATE = 'navigate',
     EVENT_DOWNLOAD = 'download';
 
@@ -229,7 +230,7 @@ function buildView(stateMachine, model) {
         const event = new Event(eventName);
         event.data = eventData;
         eventTarget.dispatchEvent(event);
-        // console.log('EVENT: ' + eventName + '' + JSON.stringify(eventData));
+        console.log('EVENT: ' + eventName + '' + JSON.stringify(eventData));
     }
 
     elGoButton.onclick = () => trigger(EVENT_GO_BUTTON_CLICKED);
@@ -254,10 +255,50 @@ function buildView(stateMachine, model) {
             });
         }
     }
+
     elCanvas.onmousemove = elCanvas.onmousedown = event => triggerMouseEvent(event, EVENT_MOUSE_MOVE);
-    elCanvas.onclick = event => triggerMouseEvent(event, EVENT_MOUSE_CLICK);
+    elCanvas.ontouchmove = event => {
+        const {x, y} = renderer.getMazeCoordsFromScreenCoords(event.targetTouches[0].clientX, event.targetTouches[0].clientY);
+        if (x !== null && y !== null) {
+            trigger(EVENT_MOUSE_MOVE, {
+                x, y, button: 1, shift: true
+            });
+        }
+    };
+    elCanvas.ontouchend = event => {
+        event.preventDefault();
+        trigger(EVENT_MOUSE_MOVE_END);
+    };
     elCanvas.onmouseup = event => triggerMouseEvent(event, EVENT_MOUSE_MOVE_END);
-    elCanvas.onmouseleave = event => trigger(EVENT_MOUSE_LEAVE);
+    elCanvas.onmouseleave = event => trigger(event, EVENT_MOUSE_LEAVE);
+
+    function handleCanvasClick(x, y) {
+        if (x !== null && y !== null && model.playState) {
+            const playerPosition = model.playState.cell,
+                xDiff = x - playerPosition.x,
+                yDiff = y - playerPosition.y;
+            if (xDiff || yDiff) {
+                const horizontalMove = Math.abs(xDiff) > Math.abs(yDiff);
+                let direction;
+                if (horizontalMove) {
+                    direction = xDiff > 0 ? 'east' : 'west';
+                } else {
+                    direction = yDiff > 0 ? 'south' : 'north';
+                }
+                trigger(EVENT_NAVIGATE, {
+                    direction, ctrl: true, shift: true
+                });
+            }
+        }
+    }
+    elCanvas.ontouchstart = event => {
+        const {x,y} = renderer.getMazeCoordsFromScreenCoords(event.targetTouches[0].clientX, event.targetTouches[0].clientY);
+        handleCanvasClick(x, y);
+    };
+    elCanvas.onclick = event => {
+        const {x,y} = renderer.getMazeCoordsFromScreenCoords(event.clientX, event.clientY);
+        handleCanvasClick(x, y);
+    };
 
     window.onkeydown = event => {
         const code = event.keyCode;

@@ -75,7 +75,7 @@ window.onload = () => {
             [STATE_INIT]: 'Click the GO button to create a maze',
             [STATE_DISPLAYING]: 'Click REFRESH to make a different maze<br><br>Hover over the maze to view a distance map',
             [STATE_MASKING]: 'Select squares on the grid to create a mask.<br><br>Hold down SHIFT to select a rectangle.<br><br>Masked squares will not be included in the maze',
-            [STATE_PLAYING]: 'Use the cursor keys to guide the man to the exit<br><br>Hold down SHIFT to move as far as possible in a direction<br><br>Hold down CTRL and SHIFT to keep moving until the next junction'
+            [STATE_PLAYING]: 'Click on the maze or use the cursor keys to guide the man to the exit<br><br>Hold down SHIFT to move as far as possible in a direction<br><br>Hold down CTRL and SHIFT to keep moving until the next junction'
         }[state];
         view.showInfo(infoMsg);
     }
