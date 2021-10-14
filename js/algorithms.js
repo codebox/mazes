@@ -191,6 +191,44 @@ const algorithms = (() => {
             }
 
             return grid;
+        },
+        kruskals(grid) {
+            "use strict";
+            const links = [],
+                connectedSets = {};
+            let cellId = 0;
+            grid.forEachCell(cell => {
+                if (cell.neighbours.east.cell) {
+                    links.push([cell, cell.neighbours.east.cell]);
+                }
+                if (cell.neighbours.south.cell) {
+                    links.push([cell, cell.neighbours.south.cell]);
+                }
+                cell.metadata.id = cellId;
+                connectedSets[cellId] = [cell];
+                cellId += 1;
+            });
+
+            shuffleArray(links);
+
+            function mergeSets(id1, id2) {
+                connectedSets[id2].forEach(cell => {
+                    cell.metadata.id = id1;
+                    connectedSets[id1].push(cell);
+                })
+                delete connectedSets[id2];
+            }
+
+            while (links.length) {
+                const [cell1, cell2] = links.pop(),
+                    id1 = cell1.metadata.id,
+                    id2 = cell2.metadata.id;
+                if (id1 !== id2) {
+                    cell1.linkTo(cell2);
+                    mergeSets(id1, id2);
+                }
+            }
+            return grid;
         }
     };
 })();

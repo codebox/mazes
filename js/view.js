@@ -230,7 +230,7 @@ function buildView(stateMachine, model) {
         const event = new Event(eventName);
         event.data = eventData;
         eventTarget.dispatchEvent(event);
-        console.log('EVENT: ' + eventName + '' + JSON.stringify(eventData));
+        // console.log('EVENT: ' + eventName + '' + JSON.stringify(eventData));
     }
 
     elGoButton.onclick = () => trigger(EVENT_GO_BUTTON_CLICKED);
