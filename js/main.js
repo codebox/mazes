@@ -104,6 +104,7 @@ window.onload = () => {
             applyMask(grid);
         }
         const maze = applyAlgorithm ? algorithms[model.algorithm.function](grid) : grid;
+        maze.clearMetadata('visited');
         view.renderMaze(model.maze = maze);
         if (applyAlgorithm) {
             showMazeDetails();
@@ -137,6 +138,7 @@ window.onload = () => {
             model.masks.getCurrent().validate();
             stateMachine.init();
             model.applyMask = !model.masks.getCurrent().isEmpty();
+            model.maze.clearMetadata('selected');
             renderMaze(false);
             updateUiForNewState();
 
@@ -163,7 +165,6 @@ window.onload = () => {
             endY = Math.max(y1, y2);
 
         const grid = model.maze;
-        grid.clearMetadata();
 
         for (let x = startX; x <= endX; x++) {
             for (let y = startY; y <= endY; y++) {
@@ -191,6 +192,7 @@ window.onload = () => {
     view.on(EVENT_MOUSE_MOVE).ifState(STATE_DISPLAYING).then(event => {
         model.maze.findDistancesFrom(event.data.x, event.data.y);
         view.renderMaze(model.maze);
+        model.maze.clearMetadata('maxDistance', 'maxDistancePoint', 'distance');
     });
 
     view.on(EVENT_MOUSE_MOVE_END).ifState(STATE_MASKING).then(event => {
@@ -210,17 +212,17 @@ window.onload = () => {
     });
 
     view.on(EVENT_MOUSE_LEAVE).ifState(STATE_DISPLAYING).then(event => {
-        model.maze.clearMetadata();
+        // model.maze.clearMetadata();
         view.renderMaze(model.maze);
     });
 
     function movePlayer(newCell) {
         const currentCell = model.playState.cell;
         delete currentCell.metadata.player;
-        if (!currentCell.metadata.playerVisited) {
-            currentCell.metadata.playerVisited = 0;
+        if (!newCell.metadata.playerVisited) {
+            newCell.metadata.playerVisited = 0;
         }
-        currentCell.metadata.playerVisited++;
+        newCell.metadata.playerVisited++;
         newCell.metadata.player = true;
         model.playState.cell = newCell;
         view.renderMaze(model.maze);
@@ -228,7 +230,7 @@ window.onload = () => {
 
     view.on(EVENT_PLAY_CLICKED).ifState(STATE_DISPLAYING).then(event => {
         stateMachine.playing();
-        model.maze.clearMetadata();
+        // model.maze.clearMetadata();
 
         const details = model.maze.getDetails(),
             startX = details.longestPath.start.x,
@@ -259,7 +261,7 @@ window.onload = () => {
 
     view.on(EVENT_QUIT_CLICKED).ifState(STATE_PLAYING).then(event => {
         clearInterval(model.playState.timer);
-        model.maze.clearMetadata();
+        model.maze.clearMetadata('player', 'playerVisited', 'solution', 'finish');
         showMazeDetails();
         view.renderMaze(model.maze);
         stateMachine.displaying();
@@ -267,10 +269,7 @@ window.onload = () => {
     });
 
     view.on(EVENT_SOLUTION_CLICKED).ifState(STATE_PLAYING).then(event => {
-        const playerVisitedCells = model.maze.filterCells(cell => cell.metadata.playerVisited),
-            route = model.maze.findRoute(model.playState.start, model.playState.end);
-
-        playerVisitedCells.forEach(cell => cell.metadata.playerVisited = true);
+        const route = model.maze.findRoute(model.playState.start, model.playState.end);
 
         route.forEach((current, i) => {
             const previous = route[i - 1],
@@ -286,6 +285,8 @@ window.onload = () => {
                 } else if (current.y < previous.y) {
                     arrows += 's';
                 }
+            } else {
+                arrows = ' ';
             }
             if (next) {
                 if (current.x > next.x) {
@@ -297,11 +298,19 @@ window.onload = () => {
                 } else if (current.y < next.y) {
                     arrows += 's';
                 }
+            } else {
+                arrows += ' ';
             }
             model.maze.getCell(current.x, current.y).metadata.solution = arrows;
         });
-        model.maze.getCell(model.playState.start.x, model.playState.start.y).metadata.player = true;
-        model.maze.getCell(model.playState.end.x, model.playState.end.y).metadata.finish = true;
+
+        clearInterval(model.playState.timer);
+        model.playState.finished = true;
+        const startCell = model.maze.getCell(model.playState.start.x, model.playState.start.y),
+            endCell = model.maze.getCell(model.playState.end.x, model.playState.end.y);
+        // startCell.metadata.player = true;
+        // endCell.metadata.finish = true;
+        movePlayer(startCell);
         view.showDetails(`Optimal Path: <em>${route.length}</em>`);
         view.toggleSolutionButton(false);
         view.renderMaze(model.maze);
@@ -322,8 +331,8 @@ window.onload = () => {
             }[direction];
         }
         function mazeCompleted() {
+            model.playState.finished = true;
             clearInterval(model.playState.timer);
-            const playerVisitedCells = model.maze.filterCells(cell => cell.metadata.playerVisited);
 
             const elaspedTimeMillis = Date.now() - model.playState.timerStart,
                 elapsedTime = formatTime(elaspedTimeMillis),
@@ -332,7 +341,6 @@ window.onload = () => {
                 optimalRouteLength = details.maxDistance,
                 cellsPerSecond = optimalRouteLength / (elaspedTimeMillis / 1000);
 
-            playerVisitedCells.forEach(cell => cell.metadata.playerVisited = true);
             view.showDetails(`
                 Finish Time: ${elapsedTime}<br>
                 Visited Cells: ${visitedCells}<br>
@@ -347,7 +355,7 @@ window.onload = () => {
             if (moveOk) {
                 const newLocation = model.playState.cell.neighbours[direction].cell;
                 movePlayer(newLocation);
-                if (newLocation.metadata.finish) {
+                if (newLocation.metadata.finish && !model.playState.finished) {
                     mazeCompleted();
                     break;
                 }

@@ -109,14 +109,21 @@ function buildGrid(width, height) {
                 route.push(current = next);
             }
 
-            this.clearMetadata();
+            this.clearMetadata('maxDistance', 'maxDistancePoint', 'distance');
             return route.map(cell => {
                 return {x:cell.x, y:cell.y};
             });
         },
-        clearMetadata() {
-            this.forEachCell(cell => cell.metadata = {});
-            this.metadata = {};
+        clearMetadata(...keys) {
+            if (keys.length) {
+                keys.forEach(key => {
+                    delete this.metadata[key];
+                    this.forEachCell(cell => delete cell.metadata[key]);
+                });
+            } else {
+                this.forEachCell(cell => cell.metadata = {});
+                this.metadata = {};
+            }
         },
         getDetails() {
             const randomPoint = this.getRandomCell(cell => !cell.masked);
@@ -131,7 +138,7 @@ function buildGrid(width, height) {
                 cellCount = this.countCells(cell => !cell.masked),
                 deadEndCount = this.countCells(cell => !cell.masked && Object.values(cell.neighbours).filter(neighbour => neighbour.link).length === 1);
 
-            this.clearMetadata();
+            this.clearMetadata('maxDistance', 'maxDistancePoint', 'distance');
 
             return {
                 cellCount,

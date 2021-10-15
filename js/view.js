@@ -142,6 +142,8 @@ function buildView(stateMachine, model) {
                     y3 = yc + l1/2;
                     x4 = xCoordCenter + magnification/2;
                     y4 = yCoordCenter;
+                } else {
+                    return;
                 }
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
@@ -189,7 +191,7 @@ function buildView(stateMachine, model) {
                         drawRectangle(x, y, CELL_VISITED_COLOUR);
                     }
 
-                    if (cell.metadata.solution) {
+                    if (cell.metadata.solution && !cell.metadata.player && !cell.metadata.finish) {
                         drawDirectionArrows(x, y, cell.metadata.solution);
                     }
 

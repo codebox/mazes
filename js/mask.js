@@ -46,13 +46,14 @@ function buildMaskManager(model) {
                 }
 
                 function countUnmasked(cell) {
-                    cell.metadata.visited = true;
+                    cell.metadata.counted = true;
                     let count = 1;
                     cell.filterNeighbours(isNotMasked).forEach(neighbourCell => {
-                        if (!neighbourCell.metadata.visited) {
+                        if (!neighbourCell.metadata.counted) {
                             count += countUnmasked(neighbourCell);
                         }
                     });
+                    model.maze.clearMetadata('counted');
                     return count;
                 }
 

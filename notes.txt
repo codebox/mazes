@@ -20,3 +20,9 @@ PLAYING
     cursor keys
     QUIT --> DISPLAYING
     restart
+
+Bugs
+----
+    blue bg on player cell before first move
+    edit mask when mask not applied - mask does not show in editor
+    remove 3x3
