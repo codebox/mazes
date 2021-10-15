@@ -35,6 +35,7 @@ html, body {
     padding: var(--narrow-margin);
     border: 1px solid var(--border-colour);
     overflow: hidden;
+    user-select: none;
 }
 #sidebarContainer li.selected, p.selected {
     background-color: var(--alt-colour);

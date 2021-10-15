@@ -128,6 +128,7 @@ window.onload = () => {
     });
 
     view.on(EVENT_MASK_BUTTON_CLICKED).ifState(STATE_INIT).then(() => {
+        model.applyMask = true;
         stateMachine.masking();
         updateUiForNewState();
         renderMaze(false);
