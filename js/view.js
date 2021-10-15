@@ -70,7 +70,6 @@ function buildView(stateMachine, model) {
             ctx.moveTo(coord(x0), coord(y0));
             ctx.lineTo(coord(x1), coord(y1));
             ctx.stroke();
-            console.log('wall',coord(x0), coord(y0),coord(x1), coord(y1))
         }
 
         function drawRectangle(x, y, colour) {
@@ -227,14 +226,23 @@ function buildView(stateMachine, model) {
                 return {x:null, y:null};
             },
             fitCanvasToContainer() {
-                if (window.innerWidth <= 500) {
-                    elMazeContainer.style.height = `${elMazeContainer.clientWidth}px`;
+                const mobileLayout = window.innerWidth <= 500;
+                let minSize;
+
+                if (mobileLayout) {
+                    minSize = elMazeContainer.clientWidth;
+                } else {
+                    minSize = Math.min(elMazeContainer.clientWidth, elMazeContainer.clientHeight);
                 }
-                const minSize = Math.min(elMazeContainer.clientWidth, elMazeContainer.clientHeight);
+
                 magnification = Math.floor((minSize - (model.size + 1)) / model.size);
                 const canvasSize = magnification * model.size + 1;
                 elCanvas.width = canvasSize;
                 elCanvas.height = canvasSize;
+
+                if (mobileLayout) {
+                    elMazeContainer.style.height = `${elCanvas.width + 10}px`;
+                }
             }
         }
     })();

@@ -12,7 +12,7 @@ function buildStateMachine() {
         return {
             thenChangeTo(newState) {
                 if (validStates.includes(state)) {
-                    console.log('State changed to', newState);
+                    console.debug('State changed to', newState);
                     state = newState;
                 } else {
                     console.warn(`Unexpected state transition requested: ${state} -> ${newState}`);
