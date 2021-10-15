@@ -70,6 +70,7 @@ function buildView(stateMachine, model) {
             ctx.moveTo(coord(x0), coord(y0));
             ctx.lineTo(coord(x1), coord(y1));
             ctx.stroke();
+            console.log('wall',coord(x0), coord(y0),coord(x1), coord(y1))
         }
 
         function drawRectangle(x, y, colour) {
@@ -163,7 +164,7 @@ function buildView(stateMachine, model) {
 
         return {
             render(maze) {
-                magnification = Math.round((elCanvas.width - WALL_THICKNESS * (maze.width + 1))/ maze.width);
+                this.fitCanvasToContainer();
 
                 ctx.clearRect(0, 0, elCanvas.width, elCanvas.height);
                 ctx.lineWidth = WALL_THICKNESS;
@@ -224,6 +225,16 @@ function buildView(stateMachine, model) {
                     return {x,y};
                 }
                 return {x:null, y:null};
+            },
+            fitCanvasToContainer() {
+                if (window.innerWidth <= 500) {
+                    elMazeContainer.style.height = `${elMazeContainer.clientWidth}px`;
+                }
+                const minSize = Math.min(elMazeContainer.clientWidth, elMazeContainer.clientHeight);
+                magnification = Math.floor((minSize - (model.size + 1)) / model.size);
+                const canvasSize = magnification * model.size + 1;
+                elCanvas.width = canvasSize;
+                elCanvas.height = canvasSize;
             }
         }
     })();
@@ -337,16 +348,11 @@ function buildView(stateMachine, model) {
         }
     };
 
-    function fitCanvasToContainer() {
-        const minSize = Math.min(elMazeContainer.clientWidth, elMazeContainer.clientHeight);
-        elCanvas.width = minSize;
-        elCanvas.height = minSize;
-    }
     window.onresize = () => {
-        fitCanvasToContainer();
+        renderer.fitCanvasToContainer();
         trigger(EVENT_RESIZE);
     };
-    fitCanvasToContainer();
+    renderer.fitCanvasToContainer();
 
     function toggleElementVisibility(el, display) {
         el.style.display = display ? 'block' : 'none';
