@@ -229,6 +229,31 @@ const algorithms = (() => {
                 }
             }
             return grid;
+        },
+        simplifiedPrims(grid) {
+            "use strict";
+            function addToActive(cell) {
+                active.push(cell);
+                cell.metadata.visited = true;
+            }
+            const active = [];
+
+            addToActive(grid.getRandomCell(ignoringMaskedCells));
+
+            while (active.length) {
+                const randomActiveCell = randomChoice(active),
+                    randomInactiveNeighbour = randomActiveCell.randomNeighbour(ignoringVisitedAndMaskedCells);
+                if (!randomInactiveNeighbour) {
+                    const indexOfRandomActiveCell = active.indexOf(randomActiveCell);
+                    console.assert(indexOfRandomActiveCell > -1);
+                    active.splice(indexOfRandomActiveCell, 1);
+                } else {
+                    randomActiveCell.linkTo(randomInactiveNeighbour);
+                    addToActive(randomInactiveNeighbour);
+                }
+            }
+
+            return grid;
         }
     };
 })();
