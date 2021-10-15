@@ -50,7 +50,7 @@ function buildView(stateMachine, model) {
         CELL_SELECTED_COLOUR = '#006BB7',
         CELL_DEFAULT_COLOUR = 'white',
         CELL_MASKED_COLOUR = 'black',
-        SOLUTION_PATH_COLOUR = '#aaa',
+        SOLUTION_PATH_COLOUR = '#006BB7',
         WALL_COLOUR = 'black',
         CELL_VISITED_COLOUR = '#006BB722';
 
