@@ -41,9 +41,6 @@ html, body {
     background-color: var(--alt-colour);
     color: white;
 }
-#applyMask {
-    margin: var(--wide-margin) 0;
-}
 #sidebarContainer div, .title {
     border: 1px solid var(--border-colour);
     background-color: var(--panel-bg-colour);
@@ -83,7 +80,7 @@ li, #applyMask p {
 #applyMask {
     padding: var(--narrow-margin) 0;
     font-size: var(--small-font-size);
-    margin: var(--narrow-margin) 0 var(--wide-margin) 0;
+    margin: var(--narrow-margin) 0;
 }
 #applyMask p {
     margin: 0;

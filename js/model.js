@@ -1,6 +1,6 @@
 function buildModel() {
     const size = config.mazeSizes[config.mazeSizes.length - 3],
-        algorithm = config.algorithms[config.algorithms.length - 1];
+        algorithm = config.algorithms.find(algorithm => algorithm.defaultSelection);
 
     const model = {
         applyMask: true,

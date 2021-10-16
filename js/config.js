@@ -7,7 +7,9 @@ const config = {
         {name:'Wilson\'s', maskable: true, function: 'wilson'},
         {name:'Hunt and Kill', maskable: true, function: 'huntAndKill'},
         {name:'Kruskal\'s', maskable: true, function: 'kruskals'},
-        {name:'Recursive Backtrack', maskable: true, function: 'recursiveBacktrack'},
-        {name:'Simplified Prim\'s', maskable: true, function: 'simplifiedPrims'}
+        {name:'Recursive Backtrack', maskable: true, function: 'recursiveBacktrack', defaultSelection: true},
+        {name:'Simplified Prim\'s', maskable: true, function: 'simplifiedPrims'},
+        {name:'True Prim\'s', maskable: true, function: 'truePrims'},
+        {name:'Eller\'s', maskable: false, function: 'ellers'}
     ]
 };

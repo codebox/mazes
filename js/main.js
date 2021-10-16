@@ -213,7 +213,6 @@ window.onload = () => {
     });
 
     view.on(EVENT_MOUSE_LEAVE).ifState(STATE_DISPLAYING).then(event => {
-        // model.maze.clearMetadata();
         view.renderMaze(model.maze);
     });
 
@@ -231,7 +230,6 @@ window.onload = () => {
 
     view.on(EVENT_PLAY_CLICKED).ifState(STATE_DISPLAYING).then(event => {
         stateMachine.playing();
-        // model.maze.clearMetadata();
 
         const details = model.maze.getDetails(),
             startX = details.longestPath.start.x,
@@ -307,10 +305,7 @@ window.onload = () => {
 
         clearInterval(model.playState.timer);
         model.playState.finished = true;
-        const startCell = model.maze.getCell(model.playState.start.x, model.playState.start.y),
-            endCell = model.maze.getCell(model.playState.end.x, model.playState.end.y);
-        // startCell.metadata.player = true;
-        // endCell.metadata.finish = true;
+        const startCell = model.maze.getCell(model.playState.start.x, model.playState.start.y);
         movePlayer(startCell);
         view.showDetails(`Optimal Path: <em>${route.length}</em>`);
         view.toggleSolutionButton(false);

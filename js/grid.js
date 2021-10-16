@@ -171,7 +171,6 @@ function buildGrid(width, height) {
         maskCell(x,y) {
             this.getCell(x, y).mask();
         },
-        cells, //TODO remove
         metadata: {},
         width,height
     };

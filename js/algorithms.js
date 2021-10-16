@@ -254,6 +254,128 @@ const algorithms = (() => {
             }
 
             return grid;
+        },
+        truePrims(grid) {
+            "use strict";
+            function addToActive(cell) {
+                active.push(cell);
+                cell.metadata.visited = true;
+            }
+
+            function getCellWithLowestCost(cells) {
+                return cells.sort((n1, n2) => n1.metadata.cost - n2.metadata.cost)[0]
+            }
+
+            const active = [];
+
+            grid.forEachCell(cell => {
+                cell.metadata.cost = randomInt(grid.width * grid.height);
+            });
+
+            addToActive(grid.getRandomCell(ignoringMaskedCells));
+
+            while (active.length) {
+                const randomActiveCell = getCellWithLowestCost(active),
+                    inactiveNeighbours = randomActiveCell.filterNeighbours(ignoringVisitedAndMaskedCells);
+                if (!inactiveNeighbours.length) {
+                    const indexOfRandomActiveCell = active.indexOf(randomActiveCell);
+                    console.assert(indexOfRandomActiveCell > -1);
+                    active.splice(indexOfRandomActiveCell, 1);
+                } else {
+                    const inactiveNeighbourWithLowestCost = getCellWithLowestCost(inactiveNeighbours);
+                    randomActiveCell.linkTo(inactiveNeighbourWithLowestCost);
+                    addToActive(inactiveNeighbourWithLowestCost);
+                }
+            }
+
+            grid.clearMetadata('cost');
+
+            return grid;
+        },
+        ellers(grid) {
+            "use strict";
+            const ODDS_OF_MERGE = 2,
+                ODDS_OF_LINK_BELOW = 4,
+                sets = {};
+            let nextSetId = 1;
+
+            function addCellToSet(setId, cell) {
+                cell.metadata.setId = setId;
+                if (!sets[setId]) {
+                    sets[setId] = [];
+                }
+                sets[setId].push(cell);
+            }
+
+            function mergeSets(setId1, setId2) {
+                const set1 = sets[setId1],
+                    set2 = sets[setId2];
+                console.assert(set1.length && set2.length);
+                set2.forEach(cell => addCellToSet(setId1, cell));
+                delete sets[setId2];
+            }
+
+            function linkToCellBelow(cell) {
+                const {x,y} = cell,
+                    cellBelow = grid.getCell(x, y+1);
+                cell.linkTo(cellBelow);
+                addCellToSet(cell.metadata.setId, cellBelow);
+            }
+
+            function mergeCellsInRow(y, oddsOfMerge=1) {
+                for(let i=0; i<grid.width-1; i++) {
+                    const cell1 = grid.getCell(i, y),
+                        cell2 = grid.getCell(i+1, y),
+                        cell1SetId = cell1.metadata.setId,
+                        cell2SetId = cell2.metadata.setId;
+
+                    if (cell1SetId !== cell2SetId && randomInt(oddsOfMerge) === 0) {
+                        cell1.linkTo(cell2);
+                        mergeSets(cell1.metadata.setId, cell2.metadata.setId);
+                    }
+                }
+            }
+
+            for (let y = 0; y < grid.height; y++) {
+                const row = [];
+                for (let x = 0; x < grid.width; x++) {
+                    const cell = grid.getCell(x, y);
+                    if (!cell.metadata.setId) {
+                        addCellToSet(nextSetId++, cell);
+                    }
+                    row.push(cell);
+                }
+
+                const isLastRow = y === grid.height - 1;
+                if (isLastRow) {
+                    mergeCellsInRow(y);
+
+                } else {
+                    mergeCellsInRow(y, ODDS_OF_MERGE);
+
+                    const cellsInRowBySet = {};
+                    row.forEach(cell => {
+                        const setId = cell.metadata.setId;
+                        if (!cellsInRowBySet[setId]) {
+                            cellsInRowBySet[setId] = [];
+                        }
+                        cellsInRowBySet[setId].push(cell);
+                    });
+
+                    Object.keys(cellsInRowBySet).forEach(setId => {
+                        shuffleArray(cellsInRowBySet[setId]).forEach((cell, i) => {
+                            if (i === 0) {
+                                linkToCellBelow(cell);
+                            } else if (randomInt(ODDS_OF_LINK_BELOW) === 0) {
+                                linkToCellBelow(cell);
+                            }
+                        });
+                    });
+                }
+
+            }
+            grid.clearMetadata('setId');
+            return grid;
         }
     };
 })();
