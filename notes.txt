@@ -1,0 +1,3 @@
+Bugs
+    make cells have white background so dl mazes look better
+    'change parameters' -> 'design new maze'

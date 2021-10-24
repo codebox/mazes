@@ -8,6 +8,7 @@ const EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
     EVENT_PLAY_CLICKED = 'playClicked',
     EVENT_QUIT_CLICKED = 'quitClicked',
     EVENT_SOLUTION_CLICKED = 'solutionClicked',
+    EVENT_MAZE_SHAPE_SELECTED = 'mazeShapeSelected',
     EVENT_MAZE_SIZE_SELECTED = 'mazeSizeSelected',
     EVENT_MAZE_ALGORITHM_SELECTED = 'mazeAlgorithmSelected',
     EVENT_MOUSE_MOVE = 'mouseMove',
@@ -33,6 +34,7 @@ function buildView(stateMachine, model) {
         elClearMaskButton = document.getElementById('clearMask'),
         elPlayButton = document.getElementById('play'),
         elMazeSizeList = document.getElementById('sizeSelector'),
+        elMazeShapeList = document.getElementById('shapeSelector'),
         elMazeAlgorithmList = document.getElementById('algorithmSelector'),
         elApplyMaskToggle = document.getElementById('applyMaskToggle'),
         elMaskNotSupported = document.getElementById('maskNotSupported'),
@@ -367,6 +369,13 @@ function buildView(stateMachine, model) {
     }
 
     return {
+        addMazeShape(value, description) {
+            const elMazeShapeItem = document.createElement('li');
+            elMazeShapeItem.innerHTML = description;
+            elMazeShapeItem.onclick = () => trigger(EVENT_MAZE_SHAPE_SELECTED, value);
+            elMazeShapeList.appendChild(elMazeShapeItem);
+            elMazeShapeItem.dataset.value = value;
+        },
         addMazeSize(value, description) {
             const elMazeSizeItem = document.createElement('li');
             elMazeSizeItem.innerHTML = description;
@@ -380,6 +389,11 @@ function buildView(stateMachine, model) {
             elMazeAlgorithmItem.onclick = () => trigger(EVENT_MAZE_ALGORITHM_SELECTED, algorithmName);
             elMazeAlgorithmList.appendChild(elMazeAlgorithmItem);
             elMazeAlgorithmItem.dataset.value = algorithmName;
+        },
+        setMazeShape(shape) {
+            [...elMazeShapeList.querySelectorAll('li')].forEach(el => {
+                el.classList.toggle('selected', el.dataset.value === shape);
+            });
         },
         setMazeSize(size) {
             [...elMazeSizeList.querySelectorAll('li')].forEach(el => {

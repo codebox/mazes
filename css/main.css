@@ -110,6 +110,9 @@ div#details em {
     font-style: normal;
     color: var(--alt-colour);
 }
+#shapeSelector li {
+    text-transform: capitalize;
+}
 @media screen and (max-width: 500px) {
     #container {
         flex-direction: column;

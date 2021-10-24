@@ -1,4 +1,5 @@
 const config = {
+    mazeShapes: ['square', 'triangle','hexagon','circle'],
     mazeSizes: [10,20,30,40],
     algorithms: [
         {name:'Binary Tree', maskable: false, function: 'binaryTree'},
