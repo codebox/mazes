@@ -21,7 +21,10 @@ window.onload = () => {
         }
         onShapeSelected(model.shape);
 
-        view.on(EVENT_MAZE_SHAPE_SELECTED).then(onShapeSelected);
+        view.on(EVENT_MAZE_SHAPE_SELECTED).then(shapeName => {
+            onShapeSelected(shapeName);
+            setupSizeParameters();
+        });
     }
 
     function setupSizeParameters() {
@@ -46,7 +49,6 @@ window.onload = () => {
         view.on(EVENT_SIZE_PARAMETER_CHANGED).then(data => {
             onParameterChanged(data.name, data.value);
         });
-        view.on(EVENT_MAZE_SHAPE_SELECTED).then(setupSizeParameters);
     }
 
     setupShapeParameter();

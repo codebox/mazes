@@ -61,7 +61,10 @@ export function buildView(model) {
             elParameterValue.setAttribute('required', 'required');
             elParameterValue.setAttribute('min', minimumValue);
             elParameterValue.setAttribute('max', maximumValue);
-            elParameterValue.oninput = () => eventTarget.trigger(EVENT_SIZE_PARAMETER_CHANGED);
+            elParameterValue.oninput = () => eventTarget.trigger(EVENT_SIZE_PARAMETER_CHANGED, {
+                name,
+                value: elParameterValue.value
+            });
             elParameterValue.dataset.value = name;
 
             elParameterItem.appendChild(elParameterName);
