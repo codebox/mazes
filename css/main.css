@@ -110,7 +110,11 @@ div#details em {
     font-style: normal;
     color: var(--alt-colour);
 }
-#shapeSelector li {
+#sizeParameters label {
+    display: inline-block;
+    width: 50px;
+}
+#shapeSelector li, #sizeParameters label {
     text-transform: capitalize;
 }
 @media screen and (max-width: 500px) {

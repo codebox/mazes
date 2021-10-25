@@ -1,10 +1,57 @@
-import {buildMaze} from '../../mazejs/web/js/main.js';
+import {buildModel} from './model.js';
+import {buildView} from './view.js';
+import {shapes} from '../../mazejs/web/js/shapes.js';
+import {
+    EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED
+} from './view.js';
+import {config} from './config.js';
 
 window.onload = () => {
     "use strict";
-    // const model = buildModel(),
-    //     stateMachine = buildStateMachine(),
-    //     view = buildView(stateMachine, model);
+    const model = buildModel(),
+        view = buildView(model);
+
+    function setupShapeParameter() {
+        Object.keys(shapes).forEach(name => {
+            view.addShape(name);
+        });
+
+        function onShapeSelected(shapeName) {
+            view.setShape(model.shape = shapeName);
+        }
+        onShapeSelected(model.shape);
+
+        view.on(EVENT_MAZE_SHAPE_SELECTED).then(onShapeSelected);
+    }
+
+    function setupSizeParameters() {
+        const shape = model.shape,
+            parameters = config.shapes[shape].parameters;
+
+        model.size = {};
+        view.clearSizeParameters();
+
+        Object.entries(parameters).forEach(([paramName, paramValues]) => {
+            view.addSizeParameter(paramName, paramValues.min, paramValues.max);
+        });
+
+        function onParameterChanged(name, value) {
+            model.size[name] = value;
+            view.setSizeParameter(name, value);
+        }
+        Object.entries(parameters).forEach(([paramName, paramValues]) => {
+            onParameterChanged(paramName, paramValues.initial);
+        });
+
+        view.on(EVENT_SIZE_PARAMETER_CHANGED).then(data => {
+            onParameterChanged(data.name, data.value);
+        });
+        view.on(EVENT_MAZE_SHAPE_SELECTED).then(setupSizeParameters);
+    }
+
+    setupShapeParameter();
+    setupSizeParameters();
+
     //
     // function getAlgorithmByName(name) {
     //     const algorithm = config.algorithms.find(a => a.name === name);
@@ -400,16 +447,14 @@ window.onload = () => {
     //
     // updateUiForNewState();
 
-const SIZE = 10;
-    const maze = buildMaze({
-        'grid': {
-            'cellShape': 'square',
-            'width': SIZE,
-            'height': SIZE
-        },
-        'algorithm': 'sidewinder',
-        'randomSeed' : 123,
-        'element': document.getElementById('maze')
-    });
-    maze.render();
+    // model.maze = buildMaze({
+    //     'grid': {
+    //         'cellShape': 'square',
+    //         'width': model.size,
+    //         'height': model.size
+    //     },
+    //     'algorithm':  model.algorithm.id,
+    //     'randomSeed' : 123,
+    //     'element': document.getElementById('maze')
+    // });
 };

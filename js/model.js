@@ -1,14 +1,13 @@
-function buildModel() {
-    const size = config.mazeSizes[config.mazeSizes.length - 3],
-        algorithm = config.algorithms.find(algorithm => algorithm.defaultSelection);
+import {config} from './config.js';
 
-    const model = {
-        applyMask: true,
-        size,
-        algorithm
-    };
+export function buildModel() {
+   const model = {
+       shape: 'square',
+       size: [10,5],
+       algorithm: 'sidewwinder'
+   };
 
-    model.masks = buildMaskManager(model);
+    // model.masks = buildMaskManager(model);
 
     return model;
 }
