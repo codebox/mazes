@@ -2,7 +2,9 @@ import {buildEventTarget} from '../../mazejs/web/js/utils.js';
 export const
     EVENT_MAZE_SHAPE_SELECTED = 'mazeShapeSelected',
     EVENT_SIZE_PARAMETER_CHANGED = 'mazeSizeParameterChanged',
-    EVENT_ALGORITHM_SELECTED = 'algorithmSelected';
+    EVENT_ALGORITHM_SELECTED = 'algorithmSelected',
+    EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
+    EVENT_WINDOW_RESIZED = 'windowResized';
 
 export function buildView(model) {
     "use strict";
@@ -31,6 +33,25 @@ export function buildView(model) {
         //
         // imgPlayer = new Image(),
         // imgExit = new Image(),
+
+    elGoButton.onclick = () => {
+        const allParametersValid = [...elSizeParameterList.querySelectorAll('input')].every(el => el.checkValidity());
+        if (allParametersValid) {
+            eventTarget.trigger(EVENT_GO_BUTTON_CLICKED);
+        } else {
+            alert('bad params'); //TODO
+        }
+    };
+
+    function fitCanvasToContainer() {
+        elCanvas.width = elMazeContainer.clientWidth;
+        elCanvas.height = elMazeContainer.clientHeight;
+    }
+    window.onresize = () => {
+        fitCanvasToContainer();
+        eventTarget.trigger(EVENT_WINDOW_RESIZED);
+    };
+    fitCanvasToContainer();
 
     return {
         // Shape
@@ -92,6 +113,10 @@ export function buildView(model) {
             [...elMazeAlgorithmList.querySelectorAll('li')].forEach(el => {
                 el.classList.toggle('selected', el.dataset.value === algorithmId);
             });
+        },
+
+        clearMaze() {
+            ctx.clearRect(0, 0, )
         },
 
         on(eventName) {

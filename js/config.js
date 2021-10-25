@@ -22,9 +22,9 @@ export const config = Object.freeze({
             description: 'Triangle Grid',
             parameters: {
                 width: {
-                    min: 2,
-                    max: 50,
-                    initial: 10
+                    min: 4,
+                    max: 85,
+                    initial: 17
                 },
                 height: {
                     min: 2,

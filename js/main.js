@@ -1,8 +1,9 @@
 import {buildModel} from './model.js';
 import {buildView} from './view.js';
+import {buildMaze} from '../../mazejs/web/js/main.js';
 import {shapes} from '../../mazejs/web/js/shapes.js';
 import {
-    EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED
+    EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
@@ -75,6 +76,18 @@ window.onload = () => {
     setupShapeParameter();
     setupSizeParameters();
     setupAlgorithms();
+
+    function renderMaze() {
+        const grid = Object.assign({'cellShape': model.shape}, model.size);
+        buildMaze({
+            grid,
+            'algorithm':  model.algorithm,
+            'randomSeed' : Date.now(),
+            'element': document.getElementById('maze')
+        }).render();
+    }
+    view.on(EVENT_GO_BUTTON_CLICKED).then(renderMaze);
+    // view.on(EVENT_WINDOW_RESIZED).then(renderMaze);
 
     //
     // function getAlgorithmByName(name) {
@@ -471,14 +484,5 @@ window.onload = () => {
     //
     // updateUiForNewState();
 
-    // model.maze = buildMaze({
-    //     'grid': {
-    //         'cellShape': 'square',
-    //         'width': model.size,
-    //         'height': model.size
-    //     },
-    //     'algorithm':  model.algorithm.id,
-    //     'randomSeed' : 123,
-    //     'element': document.getElementById('maze')
-    // });
+
 };
