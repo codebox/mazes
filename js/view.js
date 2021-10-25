@@ -1,7 +1,8 @@
 import {buildEventTarget} from '../../mazejs/web/js/utils.js';
 export const
     EVENT_MAZE_SHAPE_SELECTED = 'mazeShapeSelected',
-    EVENT_SIZE_PARAMETER_CHANGED = 'mazeSizeParameterChanged';
+    EVENT_SIZE_PARAMETER_CHANGED = 'mazeSizeParameterChanged',
+    EVENT_ALGORITHM_SELECTED = 'algorithmSelected';
 
 export function buildView(model) {
     "use strict";
@@ -74,6 +75,23 @@ export function buildView(model) {
         setSizeParameter(name, value) {
             const elParamInput = [...elSizeParameterList.querySelectorAll('input')].find(el => el.dataset.value === name);
             elParamInput.value = value;
+        },
+
+        // Algorithm
+        clearAlgorithms() {
+            elMazeAlgorithmList.innerHTML = '';
+        },
+        addAlgorithm(description, algorithmId) {
+            const elAlgorithmItem = document.createElement('li');
+            elAlgorithmItem.innerHTML = description;
+            elAlgorithmItem.onclick = () => eventTarget.trigger(EVENT_ALGORITHM_SELECTED, algorithmId);
+            elMazeAlgorithmList.appendChild(elAlgorithmItem);
+            elAlgorithmItem.dataset.value = algorithmId;
+        },
+        setAlgorithm(algorithmId) {
+            [...elMazeAlgorithmList.querySelectorAll('li')].forEach(el => {
+                el.classList.toggle('selected', el.dataset.value === algorithmId);
+            });
         },
 
         on(eventName) {

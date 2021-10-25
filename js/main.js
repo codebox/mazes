@@ -2,9 +2,10 @@ import {buildModel} from './model.js';
 import {buildView} from './view.js';
 import {shapes} from '../../mazejs/web/js/shapes.js';
 import {
-    EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED
+    EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED
 } from './view.js';
 import {config} from './config.js';
+import {algorithms} from '../../mazejs/web/js/algorithms.js';
 
 window.onload = () => {
     "use strict";
@@ -24,6 +25,7 @@ window.onload = () => {
         view.on(EVENT_MAZE_SHAPE_SELECTED).then(shapeName => {
             onShapeSelected(shapeName);
             setupSizeParameters();
+            setupAlgorithms();
         });
     }
 
@@ -51,8 +53,28 @@ window.onload = () => {
         });
     }
 
+    function setupAlgorithms() {
+        const shape = model.shape;
+
+        view.clearAlgorithms();
+
+        Object.entries(algorithms).forEach(([algorithmId, algorithm]) => {
+            if (algorithm.metadata.shapes.includes(shape)) {
+                view.addAlgorithm(algorithm.metadata.description, algorithmId);
+            }
+        });
+
+        function onAlgorithmChanged(algorithmId) {
+            view.setAlgorithm(model.algorithm = algorithmId);
+        }
+        onAlgorithmChanged(config.shapes[shape].defaultAlgorithm);
+
+        view.on(EVENT_ALGORITHM_SELECTED).then(onAlgorithmChanged);
+    }
+
     setupShapeParameter();
     setupSizeParameters();
+    setupAlgorithms();
 
     //
     // function getAlgorithmByName(name) {

@@ -1,3 +1,5 @@
+import {ALGORITHM_RECURSIVE_BACKTRACK} from '../../mazejs/web/js/constants.js';
+
 export const config = Object.freeze({
     shapes: {
         'square': {
@@ -13,7 +15,8 @@ export const config = Object.freeze({
                     max: 50,
                     initial: 10
                 }
-            }
+            },
+            defaultAlgorithm: ALGORITHM_RECURSIVE_BACKTRACK
         },
         'triangle': {
             description: 'Triangle Grid',
@@ -28,7 +31,8 @@ export const config = Object.freeze({
                     max: 50,
                     initial: 10
                 }
-            }
+            },
+            defaultAlgorithm: ALGORITHM_RECURSIVE_BACKTRACK
         },
         'hexagon': {
             description: 'Hexagon Grid',
@@ -43,7 +47,8 @@ export const config = Object.freeze({
                     max: 50,
                     initial: 10
                 }
-            }
+            },
+            defaultAlgorithm: ALGORITHM_RECURSIVE_BACKTRACK
         },
         'circle': {
             description: 'Circular',
@@ -53,7 +58,8 @@ export const config = Object.freeze({
                     max: 30,
                     initial: 10
                 }
-            }
+            },
+            defaultAlgorithm: ALGORITHM_RECURSIVE_BACKTRACK
         }
     }
 });
