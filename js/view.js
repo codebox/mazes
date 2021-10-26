@@ -85,7 +85,7 @@ export function buildView(model) {
             elParameterValue.setAttribute('max', maximumValue);
             elParameterValue.oninput = () => eventTarget.trigger(EVENT_SIZE_PARAMETER_CHANGED, {
                 name,
-                value: elParameterValue.value
+                value: Number(elParameterValue.value)
             });
             elParameterValue.dataset.value = name;
 
