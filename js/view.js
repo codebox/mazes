@@ -115,10 +115,6 @@ export function buildView(model) {
             });
         },
 
-        clearMaze() {
-            ctx.clearRect(0, 0, )
-        },
-
         on(eventName) {
             return {
                 then(handler) {

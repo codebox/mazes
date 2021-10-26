@@ -7,6 +7,7 @@ import {
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
+import {EVENT_CLICK} from '../../mazejs/web/js/drawingSurfaces.js';
 
 window.onload = () => {
     "use strict";
@@ -78,15 +79,26 @@ window.onload = () => {
     setupAlgorithms();
 
     function renderMaze() {
-        const grid = Object.assign({'cellShape': model.shape}, model.size);
-        buildMaze({
-            grid,
-            'algorithm':  model.algorithm,
-            'randomSeed' : Date.now(),
-            'element': document.getElementById('maze')
-        }).render();
+        if (model.maze) {
+            model.maze.dispose();
+        }
+        const grid = Object.assign({'cellShape': model.shape}, model.size),
+            maze = buildMaze({
+                grid,
+                'algorithm':  model.algorithm,
+                'randomSeed' : Date.now(),
+                'element': document.getElementById('maze')
+            });
+        model.maze = maze;
+        maze.render();
+        maze.on(EVENT_CLICK, event => {
+            maze.findDistancesFrom(event.coords);
+            maze.render();
+        });
     }
     view.on(EVENT_GO_BUTTON_CLICKED).then(renderMaze);
+
+
     // view.on(EVENT_WINDOW_RESIZED).then(renderMaze);
 
     //
