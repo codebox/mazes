@@ -4,7 +4,9 @@ import {buildMaze} from '../../mazejs/web/js/main.js';
 import {buildStateMachine, STATE_INIT, STATE_DISPLAYING, STATE_PLAYING, STATE_MASKING, STATE_DISTANCE_MAPPING} from './stateMachine.js';
 import {shapes} from '../../mazejs/web/js/shapes.js';
 import {
-    EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED, EVENT_MAZE_CLICK, EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED
+    EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED,
+    EVENT_MAZE_CLICK, EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED, EVENT_CREATE_MASK_BUTTON_CLICKED,
+    EVENT_SAVE_MASK_BUTTON_CLICKED
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
@@ -80,22 +82,37 @@ window.onload = () => {
     setupSizeParameters();
     setupAlgorithms();
 
-    function renderMaze() {
+    function buildMazeUsingModel(algorithm) {
         if (model.maze) {
             model.maze.dispose();
+        }
+        function getLineWidthFromSize(size) {
+            const maxSizeValue = Math.max(...Object.values(size));
+            if (maxSizeValue <= 10) {
+                return 10;
+            } else if (maxSizeValue <= 15) {
+                return 7;
+            } else if (maxSizeValue <= 20) {
+                return 5;
+            }
+            return 2;
         }
         const grid = Object.assign({'cellShape': model.shape}, model.size),
             maze = buildMaze({
                 grid,
-                'algorithm':  model.algorithm,
+                'algorithm':  algorithm || model.algorithm,
                 'randomSeed' : Date.now(),
-                'element': document.getElementById('maze')
+                'element': document.getElementById('maze'),
+                'lineWidth': getLineWidthFromSize(model.size)
             });
         model.maze = maze;
+    }
+
+    view.on(EVENT_GO_BUTTON_CLICKED).then(() => {
+        buildMazeUsingModel();
         view.renderMaze();
         stateMachine.displaying();
-    }
-    view.on(EVENT_GO_BUTTON_CLICKED).then(renderMaze);
+    });
     view.on(EVENT_SHOW_MAP_BUTTON_CLICKED).then(() => stateMachine.distanceMapping());
     view.on(EVENT_CLEAR_MAP_BUTTON_CLICKED).then(() => {
         stateMachine.displaying()
@@ -111,6 +128,16 @@ window.onload = () => {
         view.updateForNewState(newState);
     });
     view.updateForNewState(stateMachine.state);
+
+    view.on(EVENT_CREATE_MASK_BUTTON_CLICKED).ifState(STATE_DISPLAYING).then(() => {
+        stateMachine.masking();
+        buildMazeUsingModel(ALGORITHM_NONE);
+        view.renderMaze();
+    });
+
+    view.on(EVENT_SAVE_MASK_BUTTON_CLICKED).then(() => {
+        stateMachine.displaying();
+    });
     
     
     // view.on(EVENT_WINDOW_RESIZED).then(renderMaze);

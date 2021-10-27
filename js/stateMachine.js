@@ -38,7 +38,7 @@ export function buildStateMachine() {
                 .thenChangeTo(STATE_INIT);
         },
         masking() {
-            ifStateIsOneOf(STATE_INIT)
+            ifStateIsOneOf(STATE_DISPLAYING)
                 .thenChangeTo(STATE_MASKING);
         },
         displaying() {

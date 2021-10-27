@@ -6,6 +6,9 @@ export const
     EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
     EVENT_SHOW_MAP_BUTTON_CLICKED = 'showDistanceMapButtonClicked',
     EVENT_CLEAR_MAP_BUTTON_CLICKED = 'clearDistanceMapButtonClicked',
+    EVENT_CREATE_MASK_BUTTON_CLICKED = 'createMaskButtonClicked',
+    EVENT_SAVE_MASK_BUTTON_CLICKED = 'saveMaskButtonClicked',
+    EVENT_CLEAR_MASK_BUTTON_CLICKED = 'clearMaskButtonClicked',
     EVENT_WINDOW_RESIZED = 'windowResized',
     EVENT_MAZE_CLICK = 'mazeClick';
 import {EVENT_CLICK} from '../../mazejs/web/js/drawingSurfaces.js';
@@ -20,15 +23,15 @@ export function buildView(model, stateMachine) {
         elGoButton = document.getElementById('go'),
         elShowDistanceMapButton = document.getElementById('showDistanceMap'),
         elClearDistanceMapButton = document.getElementById('clearDistanceMap'),
+        elCreateMaskButton = document.getElementById('createMask'),
+        elSaveMaskButton = document.getElementById('saveMask'),
+        elClearMaskButton = document.getElementById('clearMask'),
         elInfo = document.getElementById('info'),
         elSizeParameterList = document.getElementById('sizeParameters'),
         elMazeShapeList = document.getElementById('shapeSelector'),
         elMazeAlgorithmList = document.getElementById('algorithmSelector');
         // elRefreshButton = document.getElementById('refreshMaze'),
         // elChangeMazeConfigButton = document.getElementById('changeMazeConfig'),
-        // elMaskButton = document.getElementById('mask'),
-        // elSaveMaskButton = document.getElementById('saveMask'),
-        // elClearMaskButton = document.getElementById('clearMask'),
         // elPlayButton = document.getElementById('play'),
         // elApplyMaskToggle = document.getElementById('applyMaskToggle'),
         // elMaskNotSupported = document.getElementById('maskNotSupported'),
@@ -52,6 +55,9 @@ export function buildView(model, stateMachine) {
 
     elShowDistanceMapButton.onclick = () => eventTarget.trigger(EVENT_SHOW_MAP_BUTTON_CLICKED);
     elClearDistanceMapButton.onclick = () => eventTarget.trigger(EVENT_CLEAR_MAP_BUTTON_CLICKED);
+    elCreateMaskButton.onclick = () => eventTarget.trigger(EVENT_CREATE_MASK_BUTTON_CLICKED);
+    elSaveMaskButton.onclick = () => eventTarget.trigger(EVENT_SAVE_MASK_BUTTON_CLICKED);
+    elClearMaskButton.onclick = () => eventTarget.trigger(EVENT_CLEAR_MASK_BUTTON_CLICKED);
 
     function fitCanvasToContainer() {
         elCanvas.width = elMazeContainer.clientWidth;
@@ -143,6 +149,10 @@ export function buildView(model, stateMachine) {
             toggleElementVisibility(elGoButton, [STATE_DISPLAYING, STATE_INIT].includes(state));
             toggleElementVisibility(elShowDistanceMapButton, [STATE_DISPLAYING].includes(state));
             toggleElementVisibility(elClearDistanceMapButton, [STATE_DISTANCE_MAPPING].includes(state));
+            toggleElementVisibility(elCreateMaskButton, [STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elSaveMaskButton, [STATE_MASKING].includes(state));
+            toggleElementVisibility(elClearMaskButton, [STATE_MASKING].includes(state));
+
             switch(state) {
                 case STATE_INIT:
                     this.showInfo('Select parameters for your maze and then click <b>GO</b>');
@@ -157,7 +167,7 @@ export function buildView(model, stateMachine) {
                     this.showInfo('');
                     break;
                 case STATE_MASKING:
-                    this.showInfo('');
+                    this.showInfo('Define a mask by selecting cells from the grid.<br><br>Masked cells will not be included in your maze');
                     break;
                 default:
                     console.assert(false, 'unexpected state value: ' + state);
