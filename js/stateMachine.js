@@ -7,7 +7,7 @@ export const STATE_INIT = 'Init',
     STATE_PLAYING = 'Playing';
 export function buildStateMachine() {
     "use strict";
-    const eventTarget = buildEventTarget(),
+    const eventTarget = buildEventTarget('stateMachine'),
         EVENT_STATE_CHANGED = 'stateChanged';
     let state = STATE_INIT;
 

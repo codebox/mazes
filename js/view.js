@@ -17,7 +17,7 @@ import {STATE_INIT, STATE_DISPLAYING, STATE_PLAYING, STATE_MASKING, STATE_DISTAN
 export function buildView(model, stateMachine) {
     "use strict";
 
-    const eventTarget = buildEventTarget(),
+    const eventTarget = buildEventTarget('view'),
         elCanvas = document.getElementById('maze'),
         elMazeContainer = document.getElementById('mazeContainer'),
         elGoButton = document.getElementById('go'),
@@ -135,12 +135,6 @@ export function buildView(model, stateMachine) {
             });
         },
 
-        renderMaze() {
-            const maze = model.maze;
-            maze.render();
-            maze.on(EVENT_CLICK, event => eventTarget.trigger(EVENT_MAZE_CLICK, event));
-        },
-
         updateForNewState(state) {
             toggleElementVisibility(elMazeShapeList, [STATE_DISPLAYING, STATE_INIT].includes(state));
             toggleElementVisibility(elMazeAlgorithmList, [STATE_DISPLAYING, STATE_INIT].includes(state));
@@ -178,23 +172,8 @@ export function buildView(model, stateMachine) {
             elInfo.innerHTML = msg;
         },
 
-        on(eventName) {
-            return {
-                then(handler) {
-                    eventTarget.on(eventName, handler);
-                },
-                ifState(...states) {
-                    return {
-                        then(handler) {
-                            eventTarget.on(eventName, event => {
-                                if (states.includes(stateMachine.state)) {
-                                    handler(event);
-                                }
-                            });
-                        }
-                    };
-                }
-            };
+        on(eventName, handler) {
+            eventTarget.on(eventName, handler);
         }
     };
 }

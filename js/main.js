@@ -5,12 +5,12 @@ import {buildStateMachine, STATE_INIT, STATE_DISPLAYING, STATE_PLAYING, STATE_MA
 import {shapes} from '../../mazejs/web/js/shapes.js';
 import {
     EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED,
-    EVENT_MAZE_CLICK, EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED, EVENT_CREATE_MASK_BUTTON_CLICKED,
+    EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED, EVENT_CREATE_MASK_BUTTON_CLICKED,
     EVENT_SAVE_MASK_BUTTON_CLICKED
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
-import {ALGORITHM_NONE, METADATA_MASKED} from '../../mazejs/web/js/constants.js';
+import {ALGORITHM_NONE, METADATA_MASKED, EVENT_CLICK} from '../../mazejs/web/js/constants.js';
 
 window.onload = () => {
     "use strict";
@@ -28,10 +28,11 @@ window.onload = () => {
         }
         onShapeSelected(model.shape);
 
-        view.on(EVENT_MAZE_SHAPE_SELECTED).then(shapeName => {
+        view.on(EVENT_MAZE_SHAPE_SELECTED, shapeName => {
             onShapeSelected(shapeName);
             setupSizeParameters();
             setupAlgorithms();
+            showEmptyGrid();
         });
     }
 
@@ -54,8 +55,9 @@ window.onload = () => {
             onParameterChanged(paramName, paramValues.initial);
         });
 
-        view.on(EVENT_SIZE_PARAMETER_CHANGED).then(data => {
+        view.on(EVENT_SIZE_PARAMETER_CHANGED, data => {
             onParameterChanged(data.name, data.value);
+            showEmptyGrid();
         });
     }
 
@@ -75,57 +77,68 @@ window.onload = () => {
         }
         onAlgorithmChanged(config.shapes[shape].defaultAlgorithm);
 
-        view.on(EVENT_ALGORITHM_SELECTED).then(onAlgorithmChanged);
+        view.on(EVENT_ALGORITHM_SELECTED, onAlgorithmChanged);
     }
 
     setupShapeParameter();
     setupSizeParameters();
     setupAlgorithms();
+    showEmptyGrid();
 
     function buildMazeUsingModel(algorithm) {
         if (model.maze) {
             model.maze.dispose();
         }
-        function getLineWidthFromSize(size) {
-            const maxSizeValue = Math.max(...Object.values(size));
-            if (maxSizeValue <= 10) {
-                return 10;
-            } else if (maxSizeValue <= 15) {
-                return 7;
-            } else if (maxSizeValue <= 20) {
-                return 5;
-            }
-            return 2;
-        }
+
         const grid = Object.assign({'cellShape': model.shape}, model.size),
             maze = buildMaze({
                 grid,
                 'algorithm':  algorithm || model.algorithm,
                 'randomSeed' : Date.now(),
-                'element': document.getElementById('maze'),
-                'lineWidth': getLineWidthFromSize(model.size)
+                'element': document.getElementById('maze')
             });
+
         model.maze = maze;
+
+        maze.on(EVENT_CLICK, ifStateIs(STATE_DISTANCE_MAPPING).then(event => {
+            maze.findDistancesFrom(...event.coords);
+            maze.render();;
+        }));
+
+        maze.on(EVENT_CLICK, ifStateIs(STATE_MASKING).then(event => {
+            const cell = maze.getCellByCoordinates(event.coords);
+            cell.metadata[METADATA_MASKED] = !cell.metadata[METADATA_MASKED];
+            maze.render();
+        }));
+
     }
 
-    view.on(EVENT_GO_BUTTON_CLICKED).then(() => {
+    function showEmptyGrid() {
+        buildMazeUsingModel(ALGORITHM_NONE);
+        model.maze.render();
+    }
+
+    function ifStateIs(...states) {
+        return {
+            then(handler) {
+                return event => {
+                    if (states.includes(stateMachine.state)) {
+                        handler(event);
+                    }
+                };
+            }
+        }
+    }
+
+    view.on(EVENT_GO_BUTTON_CLICKED, () => {
         buildMazeUsingModel();
-        view.renderMaze();
+        model.maze.render();
         stateMachine.displaying();
     });
-    view.on(EVENT_SHOW_MAP_BUTTON_CLICKED).then(() => stateMachine.distanceMapping());
-    view.on(EVENT_CLEAR_MAP_BUTTON_CLICKED).then(() => {
-        stateMachine.displaying()
+    view.on(EVENT_SHOW_MAP_BUTTON_CLICKED, () => stateMachine.distanceMapping());
+    view.on(EVENT_CLEAR_MAP_BUTTON_CLICKED, () => {
+        stateMachine.displaying();
         model.maze.clearDistances();
-        model.maze.render();
-    });
-    view.on(EVENT_MAZE_CLICK).ifState(STATE_DISTANCE_MAPPING).then(event => {
-        model.maze.findDistancesFrom(...event.coords);
-        model.maze.render();
-    });
-    view.on(EVENT_MAZE_CLICK).ifState(STATE_MASKING).then(event => {
-        const cell = model.maze.getCellByCoordinates(event.coords);
-        cell.metadata[METADATA_MASKED] = !cell.metadata[METADATA_MASKED];
         model.maze.render();
     });
 
@@ -134,17 +147,15 @@ window.onload = () => {
     });
     view.updateForNewState(stateMachine.state);
 
-    view.on(EVENT_CREATE_MASK_BUTTON_CLICKED).ifState(STATE_DISPLAYING).then(() => {
+    view.on(EVENT_CREATE_MASK_BUTTON_CLICKED, ifStateIs(STATE_DISPLAYING).then(() => {
         stateMachine.masking();
-        buildMazeUsingModel(ALGORITHM_NONE);
-        view.renderMaze();
-    });
+        showEmptyGrid();
+    }));
 
-    view.on(EVENT_SAVE_MASK_BUTTON_CLICKED).then(() => {
+    view.on(EVENT_SAVE_MASK_BUTTON_CLICKED, () => {
         stateMachine.displaying();
     });
-    
-    
+
     // view.on(EVENT_WINDOW_RESIZED).then(renderMaze);
 
     //
