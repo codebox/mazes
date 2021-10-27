@@ -10,7 +10,7 @@ import {
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
-import {ALGORITHM_NONE} from '../../mazejs/web/js/constants.js';
+import {ALGORITHM_NONE, METADATA_MASKED} from '../../mazejs/web/js/constants.js';
 
 window.onload = () => {
     "use strict";
@@ -121,6 +121,11 @@ window.onload = () => {
     });
     view.on(EVENT_MAZE_CLICK).ifState(STATE_DISTANCE_MAPPING).then(event => {
         model.maze.findDistancesFrom(...event.coords);
+        model.maze.render();
+    });
+    view.on(EVENT_MAZE_CLICK).ifState(STATE_MASKING).then(event => {
+        const cell = model.maze.getCellByCoordinates(event.coords);
+        cell.metadata[METADATA_MASKED] = !cell.metadata[METADATA_MASKED];
         model.maze.render();
     });
 
