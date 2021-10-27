@@ -4,15 +4,23 @@ export const
     EVENT_SIZE_PARAMETER_CHANGED = 'mazeSizeParameterChanged',
     EVENT_ALGORITHM_SELECTED = 'algorithmSelected',
     EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
-    EVENT_WINDOW_RESIZED = 'windowResized';
+    EVENT_SHOW_MAP_BUTTON_CLICKED = 'showDistanceMapButtonClicked',
+    EVENT_CLEAR_MAP_BUTTON_CLICKED = 'clearDistanceMapButtonClicked',
+    EVENT_WINDOW_RESIZED = 'windowResized',
+    EVENT_MAZE_CLICK = 'mazeClick';
+import {EVENT_CLICK} from '../../mazejs/web/js/drawingSurfaces.js';
+import {STATE_INIT, STATE_DISPLAYING, STATE_PLAYING, STATE_MASKING, STATE_DISTANCE_MAPPING} from './stateMachine.js';
 
-export function buildView(model) {
+export function buildView(model, stateMachine) {
     "use strict";
 
     const eventTarget = buildEventTarget(),
         elCanvas = document.getElementById('maze'),
         elMazeContainer = document.getElementById('mazeContainer'),
         elGoButton = document.getElementById('go'),
+        elShowDistanceMapButton = document.getElementById('showDistanceMap'),
+        elClearDistanceMapButton = document.getElementById('clearDistanceMap'),
+        elInfo = document.getElementById('info'),
         elSizeParameterList = document.getElementById('sizeParameters'),
         elMazeShapeList = document.getElementById('shapeSelector'),
         elMazeAlgorithmList = document.getElementById('algorithmSelector');
@@ -25,7 +33,6 @@ export function buildView(model) {
         // elApplyMaskToggle = document.getElementById('applyMaskToggle'),
         // elMaskNotSupported = document.getElementById('maskNotSupported'),
         // elApplyMask = document.getElementById('applyMask'),
-        // elInfo = document.getElementById('info'),
         // elDetails = document.getElementById('details'),
         // elQuitButton = document.getElementById('quit'),
         // elSolutionButton = document.getElementById('solution'),
@@ -43,6 +50,9 @@ export function buildView(model) {
         }
     };
 
+    elShowDistanceMapButton.onclick = () => eventTarget.trigger(EVENT_SHOW_MAP_BUTTON_CLICKED);
+    elClearDistanceMapButton.onclick = () => eventTarget.trigger(EVENT_CLEAR_MAP_BUTTON_CLICKED);
+
     function fitCanvasToContainer() {
         elCanvas.width = elMazeContainer.clientWidth;
         elCanvas.height = elMazeContainer.clientHeight;
@@ -52,6 +62,10 @@ export function buildView(model) {
         eventTarget.trigger(EVENT_WINDOW_RESIZED);
     };
     fitCanvasToContainer();
+
+    function toggleElementVisibility(el, display) {
+        el.style.display = display ? 'block' : 'none';
+    }
 
     return {
         // Shape
@@ -115,10 +129,60 @@ export function buildView(model) {
             });
         },
 
+        renderMaze() {
+            const maze = model.maze;
+            maze.render();
+            maze.on(EVENT_CLICK, event => eventTarget.trigger(EVENT_MAZE_CLICK, event));
+        },
+
+        updateForNewState(state) {
+            toggleElementVisibility(elMazeShapeList, [STATE_DISPLAYING, STATE_INIT].includes(state));
+            toggleElementVisibility(elMazeAlgorithmList, [STATE_DISPLAYING, STATE_INIT].includes(state));
+            toggleElementVisibility(elSizeParameterList, [STATE_DISPLAYING, STATE_INIT].includes(state));
+
+            toggleElementVisibility(elGoButton, [STATE_DISPLAYING, STATE_INIT].includes(state));
+            toggleElementVisibility(elShowDistanceMapButton, [STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elClearDistanceMapButton, [STATE_DISTANCE_MAPPING].includes(state));
+            switch(state) {
+                case STATE_INIT:
+                    this.showInfo('Select parameters for your maze and then click <b>GO</b>');
+                    break;
+                case STATE_DISPLAYING:
+                    this.showInfo('Click <b>GO</b> to generate a different maze');
+                    break;
+                case STATE_DISTANCE_MAPPING:
+                    this.showInfo('Click somewhere in the maze to generate a distance map for that location.<br><br>Cells are coloured according to how difficult they are to reach from your chosen point.');
+                    break;
+                case STATE_PLAYING:
+                    this.showInfo('');
+                    break;
+                case STATE_MASKING:
+                    this.showInfo('');
+                    break;
+                default:
+                    console.assert(false, 'unexpected state value: ' + state);
+            }
+        },
+
+        showInfo(msg) {
+            elInfo.innerHTML = msg;
+        },
+
         on(eventName) {
             return {
                 then(handler) {
                     eventTarget.on(eventName, handler);
+                },
+                ifState(...states) {
+                    return {
+                        then(handler) {
+                            eventTarget.on(eventName, event => {
+                                if (states.includes(stateMachine.state)) {
+                                    handler(event);
+                                }
+                            });
+                        }
+                    };
                 }
             };
         }

@@ -1,3 +1,6 @@
-Bugs
-    make cells have white background so dl mazes look better
-    'change parameters' -> 'design new maze'
+TODO
+----
+Give mazes entrances and exits
+Add Play mode
+Add masking
+Add toggle to show algorithm process

@@ -1,18 +1,20 @@
 import {buildModel} from './model.js';
 import {buildView} from './view.js';
 import {buildMaze} from '../../mazejs/web/js/main.js';
+import {buildStateMachine, STATE_INIT, STATE_DISPLAYING, STATE_PLAYING, STATE_MASKING, STATE_DISTANCE_MAPPING} from './stateMachine.js';
 import {shapes} from '../../mazejs/web/js/shapes.js';
 import {
-    EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED
+    EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED, EVENT_MAZE_CLICK, EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
-import {EVENT_CLICK} from '../../mazejs/web/js/drawingSurfaces.js';
+import {ALGORITHM_NONE} from '../../mazejs/web/js/constants.js';
 
 window.onload = () => {
     "use strict";
     const model = buildModel(),
-        view = buildView(model);
+        stateMachine = buildStateMachine(),
+        view = buildView(model, stateMachine);
 
     function setupShapeParameter() {
         Object.keys(shapes).forEach(name => {
@@ -60,7 +62,7 @@ window.onload = () => {
 
         view.clearAlgorithms();
 
-        Object.entries(algorithms).forEach(([algorithmId, algorithm]) => {
+        Object.entries(algorithms).filter(([algorithmId, algorithm]) => algorithmId !== ALGORITHM_NONE).forEach(([algorithmId, algorithm]) => {
             if (algorithm.metadata.shapes.includes(shape)) {
                 view.addAlgorithm(algorithm.metadata.description, algorithmId);
             }
@@ -90,15 +92,27 @@ window.onload = () => {
                 'element': document.getElementById('maze')
             });
         model.maze = maze;
-        maze.render();
-        maze.on(EVENT_CLICK, event => {
-            maze.findDistancesFrom(event.coords);
-            maze.render();
-        });
+        view.renderMaze();
+        stateMachine.displaying();
     }
     view.on(EVENT_GO_BUTTON_CLICKED).then(renderMaze);
+    view.on(EVENT_SHOW_MAP_BUTTON_CLICKED).then(() => stateMachine.distanceMapping());
+    view.on(EVENT_CLEAR_MAP_BUTTON_CLICKED).then(() => {
+        stateMachine.displaying()
+        model.maze.clearDistances();
+        model.maze.render();
+    });
+    view.on(EVENT_MAZE_CLICK).ifState(STATE_DISTANCE_MAPPING).then(event => {
+        model.maze.findDistancesFrom(...event.coords);
+        model.maze.render();
+    });
 
-
+    stateMachine.onStateChange(newState => {
+        view.updateForNewState(newState);
+    });
+    view.updateForNewState(stateMachine.state);
+    
+    
     // view.on(EVENT_WINDOW_RESIZED).then(renderMaze);
 
     //
