@@ -96,7 +96,7 @@ window.onload = () => {
                 'algorithm':  overrides.algorithm || model.algorithm,
                 'randomSeed' : Date.now(),
                 'element': document.getElementById('maze'),
-                'mask': overrides.mask || model.mask
+                'mask': overrides.mask || model.mask[getModelMaskKey()]
             });
 
         model.maze = maze;
@@ -115,7 +115,7 @@ window.onload = () => {
     }
 
     function showEmptyGrid(deleteMaskedCells) {
-        buildMazeUsingModel({algorithm: ALGORITHM_NONE, mask: deleteMaskedCells ? model.mask : []});
+        buildMazeUsingModel({algorithm: ALGORITHM_NONE, mask: deleteMaskedCells ? model.mask[getModelMaskKey()] : []});
         model.maze.render();
     }
 
@@ -148,10 +148,14 @@ window.onload = () => {
     });
     view.updateForNewState(stateMachine.state);
 
+    function getModelMaskKey() {
+        return `${model.shape}-${Object.values(model.size).join('-')}`;
+    }
+
     view.on(EVENT_CREATE_MASK_BUTTON_CLICKED, () => {
         stateMachine.masking();
         showEmptyGrid(false);
-        model.mask.forEach(maskedCoords => {
+        (model.mask[getModelMaskKey()] || []).forEach(maskedCoords => {
             const cell = model.maze.getCellByCoordinates(maskedCoords);
             cell.metadata[METADATA_MASKED] = true;
         });
@@ -160,10 +164,10 @@ window.onload = () => {
 
     view.on(EVENT_SAVE_MASK_BUTTON_CLICKED, () => {
         stateMachine.displaying();
-        model.mask = [];
+        const mask = model.mask[getModelMaskKey()] = [];
         model.maze.forEachCell(cell => {
             if (cell.metadata[METADATA_MASKED]) {
-                model.mask.push(cell.coords);
+                mask.push(cell.coords);
                 model.maze.removeCell(cell.coords);
             }
         });

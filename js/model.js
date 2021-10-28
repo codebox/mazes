@@ -3,7 +3,7 @@ import {config} from './config.js';
 export function buildModel() {
    const model = {
        shape: 'square',
-       mask: []
+       mask: {}
    };
 
     // model.masks = buildMaskManager(model);
