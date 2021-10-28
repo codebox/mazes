@@ -163,15 +163,14 @@ window.onload = () => {
     });
 
     view.on(EVENT_SAVE_MASK_BUTTON_CLICKED, () => {
-        stateMachine.displaying();
+        stateMachine.init();
         const mask = model.mask[getModelMaskKey()] = [];
         model.maze.forEachCell(cell => {
             if (cell.metadata[METADATA_MASKED]) {
                 mask.push(cell.coords);
-                model.maze.removeCell(cell.coords);
             }
         });
-        model.maze.render();
+        showEmptyGrid(true);
     });
 
     view.on(EVENT_CLEAR_MASK_BUTTON_CLICKED, () => {
