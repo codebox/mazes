@@ -136,14 +136,16 @@ export function buildView(model, stateMachine) {
         },
 
         updateForNewState(state) {
-            toggleElementVisibility(elMazeShapeList, [STATE_DISPLAYING, STATE_INIT].includes(state));
-            toggleElementVisibility(elMazeAlgorithmList, [STATE_DISPLAYING, STATE_INIT].includes(state));
-            toggleElementVisibility(elSizeParameterList, [STATE_DISPLAYING, STATE_INIT].includes(state));
+            toggleElementVisibility(elMazeShapeList,     [STATE_INIT, STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elMazeAlgorithmList, [STATE_INIT, STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elSizeParameterList, [STATE_INIT, STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elGoButton,          [STATE_INIT, STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elCreateMaskButton,  [STATE_INIT, STATE_DISPLAYING].includes(state));
 
-            toggleElementVisibility(elGoButton, [STATE_DISPLAYING, STATE_INIT].includes(state));
             toggleElementVisibility(elShowDistanceMapButton, [STATE_DISPLAYING].includes(state));
+
             toggleElementVisibility(elClearDistanceMapButton, [STATE_DISTANCE_MAPPING].includes(state));
-            toggleElementVisibility(elCreateMaskButton, [STATE_DISPLAYING].includes(state));
+
             toggleElementVisibility(elSaveMaskButton, [STATE_MASKING].includes(state));
             toggleElementVisibility(elClearMaskButton, [STATE_MASKING].includes(state));
 

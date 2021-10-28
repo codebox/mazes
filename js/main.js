@@ -6,7 +6,7 @@ import {shapes} from '../../mazejs/web/js/shapes.js';
 import {
     EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED,
     EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED, EVENT_CREATE_MASK_BUTTON_CLICKED,
-    EVENT_SAVE_MASK_BUTTON_CLICKED
+    EVENT_SAVE_MASK_BUTTON_CLICKED, EVENT_CLEAR_MASK_BUTTON_CLICKED
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
@@ -32,7 +32,7 @@ window.onload = () => {
             onShapeSelected(shapeName);
             setupSizeParameters();
             setupAlgorithms();
-            showEmptyGrid();
+            showEmptyGrid(true);
         });
     }
 
@@ -57,7 +57,7 @@ window.onload = () => {
 
         view.on(EVENT_SIZE_PARAMETER_CHANGED, data => {
             onParameterChanged(data.name, data.value);
-            showEmptyGrid();
+            showEmptyGrid(true);
         });
     }
 
@@ -83,9 +83,9 @@ window.onload = () => {
     setupShapeParameter();
     setupSizeParameters();
     setupAlgorithms();
-    showEmptyGrid();
+    showEmptyGrid(true);
 
-    function buildMazeUsingModel(algorithm) {
+    function buildMazeUsingModel(overrides={}) {
         if (model.maze) {
             model.maze.dispose();
         }
@@ -93,16 +93,17 @@ window.onload = () => {
         const grid = Object.assign({'cellShape': model.shape}, model.size),
             maze = buildMaze({
                 grid,
-                'algorithm':  algorithm || model.algorithm,
+                'algorithm':  overrides.algorithm || model.algorithm,
                 'randomSeed' : Date.now(),
-                'element': document.getElementById('maze')
+                'element': document.getElementById('maze'),
+                'mask': overrides.mask || model.mask
             });
 
         model.maze = maze;
 
         maze.on(EVENT_CLICK, ifStateIs(STATE_DISTANCE_MAPPING).then(event => {
             maze.findDistancesFrom(...event.coords);
-            maze.render();;
+            maze.render();
         }));
 
         maze.on(EVENT_CLICK, ifStateIs(STATE_MASKING).then(event => {
@@ -113,8 +114,8 @@ window.onload = () => {
 
     }
 
-    function showEmptyGrid() {
-        buildMazeUsingModel(ALGORITHM_NONE);
+    function showEmptyGrid(deleteMaskedCells) {
+        buildMazeUsingModel({algorithm: ALGORITHM_NONE, mask: deleteMaskedCells ? model.mask : []});
         model.maze.render();
     }
 
@@ -147,13 +148,33 @@ window.onload = () => {
     });
     view.updateForNewState(stateMachine.state);
 
-    view.on(EVENT_CREATE_MASK_BUTTON_CLICKED, ifStateIs(STATE_DISPLAYING).then(() => {
+    view.on(EVENT_CREATE_MASK_BUTTON_CLICKED, () => {
         stateMachine.masking();
-        showEmptyGrid();
-    }));
+        showEmptyGrid(false);
+        model.mask.forEach(maskedCoords => {
+            const cell = model.maze.getCellByCoordinates(maskedCoords);
+            cell.metadata[METADATA_MASKED] = true;
+        });
+        model.maze.render();
+    });
 
     view.on(EVENT_SAVE_MASK_BUTTON_CLICKED, () => {
         stateMachine.displaying();
+        model.mask = [];
+        model.maze.forEachCell(cell => {
+            if (cell.metadata[METADATA_MASKED]) {
+                model.mask.push(cell.coords);
+                model.maze.removeCell(cell.coords);
+            }
+        });
+        model.maze.render();
+    });
+
+    view.on(EVENT_CLEAR_MASK_BUTTON_CLICKED, () => {
+        model.maze.forEachCell(cell => {
+            delete cell.metadata[METADATA_MASKED];
+        });
+        model.maze.render();
     });
 
     // view.on(EVENT_WINDOW_RESIZED).then(renderMaze);
