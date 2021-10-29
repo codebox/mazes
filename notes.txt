@@ -1,9 +1,11 @@
 TODO
 ----
+Add common code for stepwise algorithm
 Give mazes entrances and exits
 Add Play mode
-Add toggle to show algorithm process
+Display seed and allow user entry
 
 Bugs
 ----
 Some algorithms break if a mask is applied (Square, Sidewinder, mask TL corner) and others generate invalid mazes
+Resizing window breaks maze for certain states

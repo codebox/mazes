@@ -1,7 +1,7 @@
 import {buildModel} from './model.js';
 import {buildView} from './view.js';
 import {buildMaze} from '../../mazejs/web/js/main.js';
-import {buildStateMachine, STATE_INIT, STATE_DISPLAYING, STATE_PLAYING, STATE_MASKING, STATE_DISTANCE_MAPPING} from './stateMachine.js';
+import {buildStateMachine, STATE_INIT, STATE_DISPLAYING, STATE_PLAYING, STATE_MASKING, STATE_DISTANCE_MAPPING, STATE_RUNNING_ALGORITHM} from './stateMachine.js';
 import {shapes} from '../../mazejs/web/js/shapes.js';
 import {
     EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED,
@@ -106,7 +106,7 @@ window.onload = () => {
             maze = buildMaze({
                 grid,
                 'algorithm':  overrides.algorithm || model.algorithm,
-                'randomSeed' : Date.now(),
+                'randomSeed' : model.randomSeed,
                 'element': document.getElementById('maze'),
                 'mask': overrides.mask || model.mask[getModelMaskKey()]
             });
@@ -168,6 +168,7 @@ window.onload = () => {
     }
 
     view.on(EVENT_GO_BUTTON_CLICKED, () => {
+        model.randomSeed = Date.now();
         buildMazeUsingModel().then(() => {
             model.maze.render();
             stateMachine.displaying();
@@ -224,6 +225,13 @@ window.onload = () => {
         });
         model.maze.render();
     });
+
+    view.on(EVENT_WINDOW_RESIZED, ifStateIs(STATE_DISPLAYING).then(event => {
+        buildMazeUsingModel({algorithmDelay: false}).then(() => model.maze.render());
+    }));
+    view.on(EVENT_WINDOW_RESIZED, ifStateIs(STATE_INIT).then(event => {
+        showEmptyGrid(false);
+    }));
 
     // view.on(EVENT_WINDOW_RESIZED).then(renderMaze);
 
