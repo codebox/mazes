@@ -2,5 +2,8 @@ TODO
 ----
 Give mazes entrances and exits
 Add Play mode
-Add masking
 Add toggle to show algorithm process
+
+Bugs
+----
+Some algorithms break if a mask is applied (Square, Sidewinder, mask TL corner) and others generate invalid mazes

@@ -4,6 +4,7 @@ export const STATE_INIT = 'Init',
     STATE_MASKING = 'Masking',
     STATE_DISPLAYING = 'Displaying',
     STATE_DISTANCE_MAPPING = 'Distance Mapping',
+    STATE_RUNNING_ALGORITHM = 'Running Algorithm',
     STATE_PLAYING = 'Playing';
 export function buildStateMachine() {
     "use strict";
@@ -42,7 +43,7 @@ export function buildStateMachine() {
                 .thenChangeTo(STATE_MASKING);
         },
         displaying() {
-            ifStateIsOneOf(STATE_INIT, STATE_MASKING, STATE_PLAYING, STATE_DISTANCE_MAPPING)
+            ifStateIsOneOf(STATE_INIT, STATE_MASKING, STATE_PLAYING, STATE_DISTANCE_MAPPING, STATE_RUNNING_ALGORITHM)
                 .thenChangeTo(STATE_DISPLAYING);
         },
         distanceMapping() {
@@ -52,6 +53,10 @@ export function buildStateMachine() {
         playing() {
             ifStateIsOneOf(STATE_DISPLAYING)
                 .thenChangeTo(STATE_PLAYING);
+        },
+        runningAlgorithm() {
+            ifStateIsOneOf(STATE_INIT, STATE_DISPLAYING)
+                .thenChangeTo(STATE_RUNNING_ALGORITHM);
         },
         onStateChange(handler) {
             eventTarget.on(EVENT_STATE_CHANGED, handler);

@@ -6,7 +6,7 @@ import {shapes} from '../../mazejs/web/js/shapes.js';
 import {
     EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED,
     EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED, EVENT_CREATE_MASK_BUTTON_CLICKED,
-    EVENT_SAVE_MASK_BUTTON_CLICKED, EVENT_CLEAR_MASK_BUTTON_CLICKED
+    EVENT_SAVE_MASK_BUTTON_CLICKED, EVENT_CLEAR_MASK_BUTTON_CLICKED, EVENT_FINISH_RUNNING_BUTTON_CLICKED
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
@@ -85,7 +85,7 @@ window.onload = () => {
     setupAlgorithms();
     showEmptyGrid(true);
 
-    function buildMazeUsingModel(overrides={}) {
+    function buildMazeUsingModel(runStepwise=false, overrides={}) {
         if (model.maze) {
             model.maze.dispose();
         }
@@ -112,11 +112,34 @@ window.onload = () => {
             maze.render();
         }));
 
+        const runAlgorithm = maze.runAlgorithm;
+        if (runStepwise) {
+            model.runningAlgorithm = {run: runAlgorithm};
+            return new Promise(resolve => {
+                stateMachine.runningAlgorithm();
+                model.runningAlgorithm.interval = setInterval(() => {
+                    const done = runAlgorithm.oneStep();
+                    maze.render();
+                    if (done) {
+                        clearInterval(model.runningAlgorithm.interval);
+                        delete model.runningAlgorithm;
+                        stateMachine.displaying();
+                        resolve();
+                    }
+                }, 5000/maze.cellCount);
+            });
+
+        } else {
+            runAlgorithm.toCompletion();
+            maze.render();
+            return Promise.resolve();
+        }
+
     }
 
     function showEmptyGrid(deleteMaskedCells) {
-        buildMazeUsingModel({algorithm: ALGORITHM_NONE, mask: deleteMaskedCells ? model.mask[getModelMaskKey()] : []});
-        model.maze.render();
+        buildMazeUsingModel(false, {algorithm: ALGORITHM_NONE, mask: deleteMaskedCells ? model.mask[getModelMaskKey()] : []})
+            .then(() => model.maze.render());
     }
 
     function ifStateIs(...states) {
@@ -132,14 +155,23 @@ window.onload = () => {
     }
 
     view.on(EVENT_GO_BUTTON_CLICKED, () => {
-        buildMazeUsingModel();
-        model.maze.render();
-        stateMachine.displaying();
+        buildMazeUsingModel(true).then(() => {
+            model.maze.render();
+            stateMachine.displaying();
+        });
     });
     view.on(EVENT_SHOW_MAP_BUTTON_CLICKED, () => stateMachine.distanceMapping());
     view.on(EVENT_CLEAR_MAP_BUTTON_CLICKED, () => {
         stateMachine.displaying();
         model.maze.clearDistances();
+        model.maze.render();
+    });
+
+    view.on(EVENT_FINISH_RUNNING_BUTTON_CLICKED, () => {
+        clearInterval(model.runningAlgorithm.interval);
+        model.runningAlgorithm.run.toCompletion();
+        delete model.runningAlgorithm;
+        stateMachine.displaying();
         model.maze.render();
     });
 

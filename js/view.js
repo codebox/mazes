@@ -9,10 +9,11 @@ export const
     EVENT_CREATE_MASK_BUTTON_CLICKED = 'createMaskButtonClicked',
     EVENT_SAVE_MASK_BUTTON_CLICKED = 'saveMaskButtonClicked',
     EVENT_CLEAR_MASK_BUTTON_CLICKED = 'clearMaskButtonClicked',
+    EVENT_FINISH_RUNNING_BUTTON_CLICKED = 'finishRunningButtonClicked',
     EVENT_WINDOW_RESIZED = 'windowResized',
     EVENT_MAZE_CLICK = 'mazeClick';
 import {EVENT_CLICK} from '../../mazejs/web/js/drawingSurfaces.js';
-import {STATE_INIT, STATE_DISPLAYING, STATE_PLAYING, STATE_MASKING, STATE_DISTANCE_MAPPING} from './stateMachine.js';
+import {STATE_INIT, STATE_DISPLAYING, STATE_PLAYING, STATE_MASKING, STATE_DISTANCE_MAPPING, STATE_RUNNING_ALGORITHM} from './stateMachine.js';
 
 export function buildView(model, stateMachine) {
     "use strict";
@@ -26,6 +27,7 @@ export function buildView(model, stateMachine) {
         elCreateMaskButton = document.getElementById('createMask'),
         elSaveMaskButton = document.getElementById('saveMask'),
         elClearMaskButton = document.getElementById('clearMask'),
+        elFinishRunningButton = document.getElementById('finishRunning'),
         elInfo = document.getElementById('info'),
         elSizeParameterList = document.getElementById('sizeParameters'),
         elMazeShapeList = document.getElementById('shapeSelector'),
@@ -58,6 +60,7 @@ export function buildView(model, stateMachine) {
     elCreateMaskButton.onclick = () => eventTarget.trigger(EVENT_CREATE_MASK_BUTTON_CLICKED);
     elSaveMaskButton.onclick = () => eventTarget.trigger(EVENT_SAVE_MASK_BUTTON_CLICKED);
     elClearMaskButton.onclick = () => eventTarget.trigger(EVENT_CLEAR_MASK_BUTTON_CLICKED);
+    elFinishRunningButton.onclick = () => eventTarget.trigger(EVENT_FINISH_RUNNING_BUTTON_CLICKED);
 
     function fitCanvasToContainer() {
         elCanvas.width = elMazeContainer.clientWidth;
@@ -148,6 +151,7 @@ export function buildView(model, stateMachine) {
 
             toggleElementVisibility(elSaveMaskButton, [STATE_MASKING].includes(state));
             toggleElementVisibility(elClearMaskButton, [STATE_MASKING].includes(state));
+            toggleElementVisibility(elFinishRunningButton, [STATE_RUNNING_ALGORITHM].includes(state));
 
             switch(state) {
                 case STATE_INIT:
@@ -160,6 +164,7 @@ export function buildView(model, stateMachine) {
                     this.showInfo('Click somewhere in the maze to generate a distance map for that location.<br><br>Cells are coloured according to how difficult they are to reach from your chosen point.');
                     break;
                 case STATE_PLAYING:
+                case STATE_RUNNING_ALGORITHM:
                     this.showInfo('');
                     break;
                 case STATE_MASKING:
