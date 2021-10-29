@@ -6,7 +6,7 @@ import {shapes} from '../../mazejs/web/js/shapes.js';
 import {
     EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED,
     EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED, EVENT_CREATE_MASK_BUTTON_CLICKED,
-    EVENT_SAVE_MASK_BUTTON_CLICKED, EVENT_CLEAR_MASK_BUTTON_CLICKED, EVENT_FINISH_RUNNING_BUTTON_CLICKED
+    EVENT_SAVE_MASK_BUTTON_CLICKED, EVENT_CLEAR_MASK_BUTTON_CLICKED, EVENT_FINISH_RUNNING_BUTTON_CLICKED, EVENT_DELAY_SELECTED
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
@@ -80,12 +80,24 @@ window.onload = () => {
         view.on(EVENT_ALGORITHM_SELECTED, onAlgorithmChanged);
     }
 
+    function setupAlgorithmDelay() {
+        view.addAlgorithmDelay('Instant Mazes', 0);
+        view.addAlgorithmDelay('Show Algorithm Steps', 5000);
+
+        view.on(EVENT_DELAY_SELECTED, algorithmDelay => {
+            model.algorithmDelay = algorithmDelay;
+            view.setAlgorithmDelay(algorithmDelay);
+        });
+        view.setAlgorithmDelay(model.algorithmDelay);
+    }
+
     setupShapeParameter();
     setupSizeParameters();
+    setupAlgorithmDelay();
     setupAlgorithms();
     showEmptyGrid(true);
 
-    function buildMazeUsingModel(runStepwise=false, overrides={}) {
+    function buildMazeUsingModel(overrides={}) {
         if (model.maze) {
             model.maze.dispose();
         }
@@ -112,8 +124,9 @@ window.onload = () => {
             maze.render();
         }));
 
-        const runAlgorithm = maze.runAlgorithm;
-        if (runStepwise) {
+        const algorithmDelay = overrides.algorithmDelay !== undefined ? overrides.algorithmDelay : model.algorithmDelay,
+            runAlgorithm = maze.runAlgorithm;
+        if (algorithmDelay) {
             model.runningAlgorithm = {run: runAlgorithm};
             return new Promise(resolve => {
                 stateMachine.runningAlgorithm();
@@ -126,7 +139,7 @@ window.onload = () => {
                         stateMachine.displaying();
                         resolve();
                     }
-                }, 5000/maze.cellCount);
+                }, algorithmDelay/maze.cellCount);
             });
 
         } else {
@@ -138,7 +151,7 @@ window.onload = () => {
     }
 
     function showEmptyGrid(deleteMaskedCells) {
-        buildMazeUsingModel(false, {algorithm: ALGORITHM_NONE, mask: deleteMaskedCells ? model.mask[getModelMaskKey()] : []})
+        buildMazeUsingModel({algorithmDelay: 0, algorithm: ALGORITHM_NONE, mask: deleteMaskedCells ? model.mask[getModelMaskKey()] : []})
             .then(() => model.maze.render());
     }
 
@@ -155,7 +168,7 @@ window.onload = () => {
     }
 
     view.on(EVENT_GO_BUTTON_CLICKED, () => {
-        buildMazeUsingModel(true).then(() => {
+        buildMazeUsingModel().then(() => {
             model.maze.render();
             stateMachine.displaying();
         });

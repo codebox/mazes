@@ -2,6 +2,7 @@ import {buildEventTarget} from '../../mazejs/web/js/utils.js';
 export const
     EVENT_MAZE_SHAPE_SELECTED = 'mazeShapeSelected',
     EVENT_SIZE_PARAMETER_CHANGED = 'mazeSizeParameterChanged',
+    EVENT_DELAY_SELECTED = 'runModeSelected',
     EVENT_ALGORITHM_SELECTED = 'algorithmSelected',
     EVENT_GO_BUTTON_CLICKED = 'goButtonClicked',
     EVENT_SHOW_MAP_BUTTON_CLICKED = 'showDistanceMapButtonClicked',
@@ -31,7 +32,8 @@ export function buildView(model, stateMachine) {
         elInfo = document.getElementById('info'),
         elSizeParameterList = document.getElementById('sizeParameters'),
         elMazeShapeList = document.getElementById('shapeSelector'),
-        elMazeAlgorithmList = document.getElementById('algorithmSelector');
+        elMazeAlgorithmList = document.getElementById('algorithmSelector'),
+        elAlgorithmDelayList = document.getElementById('delaySelector');
         // elRefreshButton = document.getElementById('refreshMaze'),
         // elChangeMazeConfigButton = document.getElementById('changeMazeConfig'),
         // elPlayButton = document.getElementById('play'),
@@ -121,6 +123,20 @@ export function buildView(model, stateMachine) {
             elParamInput.value = value;
         },
 
+        // Algorithm Delay
+        addAlgorithmDelay(description, value) {
+            const elDelayItem = document.createElement('li');
+            elDelayItem.innerHTML = description;
+            elDelayItem.onclick = () => eventTarget.trigger(EVENT_DELAY_SELECTED, value);
+            elAlgorithmDelayList.appendChild(elDelayItem);
+            elDelayItem.dataset.value = value;
+        },
+        setAlgorithmDelay(algorithmDelay) {
+            [...elAlgorithmDelayList.querySelectorAll('li')].forEach(el => {
+                el.classList.toggle('selected', Number(el.dataset.value) === algorithmDelay);
+            });
+        },
+
         // Algorithm
         clearAlgorithms() {
             elMazeAlgorithmList.innerHTML = '';
@@ -139,11 +155,12 @@ export function buildView(model, stateMachine) {
         },
 
         updateForNewState(state) {
-            toggleElementVisibility(elMazeShapeList,     [STATE_INIT, STATE_DISPLAYING].includes(state));
-            toggleElementVisibility(elMazeAlgorithmList, [STATE_INIT, STATE_DISPLAYING].includes(state));
-            toggleElementVisibility(elSizeParameterList, [STATE_INIT, STATE_DISPLAYING].includes(state));
-            toggleElementVisibility(elGoButton,          [STATE_INIT, STATE_DISPLAYING].includes(state));
-            toggleElementVisibility(elCreateMaskButton,  [STATE_INIT, STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elMazeShapeList,      [STATE_INIT, STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elMazeAlgorithmList,  [STATE_INIT, STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elSizeParameterList,  [STATE_INIT, STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elAlgorithmDelayList, [STATE_INIT, STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elGoButton,           [STATE_INIT, STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elCreateMaskButton,   [STATE_INIT, STATE_DISPLAYING].includes(state));
 
             toggleElementVisibility(elShowDistanceMapButton, [STATE_DISPLAYING].includes(state));
 
@@ -164,8 +181,10 @@ export function buildView(model, stateMachine) {
                     this.showInfo('Click somewhere in the maze to generate a distance map for that location.<br><br>Cells are coloured according to how difficult they are to reach from your chosen point.');
                     break;
                 case STATE_PLAYING:
-                case STATE_RUNNING_ALGORITHM:
                     this.showInfo('');
+                    break;
+                case STATE_RUNNING_ALGORITHM:
+                    this.showInfo('The maze generation algorithm has been slowed down.<br><br>Click FINISH to skip to the end.');
                     break;
                 case STATE_MASKING:
                     this.showInfo('Define a mask by selecting cells from the grid.<br><br>Masked cells will not be included in your maze');
