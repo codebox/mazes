@@ -7,11 +7,11 @@ import {
     EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED,
     EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED, EVENT_CREATE_MASK_BUTTON_CLICKED,
     EVENT_SAVE_MASK_BUTTON_CLICKED, EVENT_CLEAR_MASK_BUTTON_CLICKED, EVENT_FINISH_RUNNING_BUTTON_CLICKED, EVENT_DELAY_SELECTED,
-    EVENT_CHANGE_PARAMS_BUTTON_CLICKED
+    EVENT_CHANGE_PARAMS_BUTTON_CLICKED, EVENT_EXITS_SELECTED
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
-import {ALGORITHM_NONE, METADATA_MASKED, EVENT_CLICK} from '../../mazejs/web/js/constants.js';
+import {ALGORITHM_NONE, METADATA_MASKED, EVENT_CLICK, EXITS_NONE, EXITS_HARDEST, EXITS_HORIZONTAL, EXITS_VERTICAL} from '../../mazejs/web/js/constants.js';
 
 window.onload = () => {
     "use strict";
@@ -92,8 +92,21 @@ window.onload = () => {
         view.setAlgorithmDelay(model.algorithmDelay);
     }
 
+    function setupExitConfigs() {
+        view.addExitConfiguration('No Entrance/Exit', EXITS_NONE);
+        view.addExitConfiguration('Bottom to Top', EXITS_VERTICAL);
+        view.addExitConfiguration('Left to Right', EXITS_HORIZONTAL);
+        view.addExitConfiguration('Hardest Entrance/Exit', EXITS_HARDEST);
+
+        view.on(EVENT_EXITS_SELECTED, exitConfig => {
+            view.setExitConfiguration(model.exitConfig = exitConfig);
+        });
+        view.setExitConfiguration(model.exitConfig);
+    }
+
     setupShapeParameter();
     setupSizeParameters();
+    setupExitConfigs();
     setupAlgorithmDelay();
     setupAlgorithms();
     showEmptyGrid(true);
@@ -109,7 +122,8 @@ window.onload = () => {
                 'algorithm':  overrides.algorithm || model.algorithm,
                 'randomSeed' : model.randomSeed,
                 'element': document.getElementById('maze'),
-                'mask': overrides.mask || model.mask[getModelMaskKey()]
+                'mask': overrides.mask || model.mask[getModelMaskKey()],
+                'exitConfig': overrides.exitConfig || model.exitConfig
             });
 
         model.maze = maze;
@@ -152,7 +166,7 @@ window.onload = () => {
     }
 
     function showEmptyGrid(deleteMaskedCells) {
-        buildMazeUsingModel({algorithmDelay: 0, algorithm: ALGORITHM_NONE, mask: deleteMaskedCells ? model.mask[getModelMaskKey()] : []})
+        buildMazeUsingModel({algorithmDelay: 0, exitConfig: EXITS_NONE, algorithm: ALGORITHM_NONE, mask: deleteMaskedCells ? model.mask[getModelMaskKey()] : []})
             .then(() => model.maze.render());
     }
 

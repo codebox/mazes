@@ -13,8 +13,9 @@ export const
     EVENT_FINISH_RUNNING_BUTTON_CLICKED = 'finishRunningButtonClicked',
     EVENT_CHANGE_PARAMS_BUTTON_CLICKED = 'changeParamsButtonClicked',
     EVENT_WINDOW_RESIZED = 'windowResized',
-    EVENT_MAZE_CLICK = 'mazeClick';
-import {EVENT_CLICK} from '../../mazejs/web/js/drawingSurfaces.js';
+    EVENT_EXITS_SELECTED = 'exitsSelected';
+
+
 import {STATE_INIT, STATE_DISPLAYING, STATE_PLAYING, STATE_MASKING, STATE_DISTANCE_MAPPING, STATE_RUNNING_ALGORITHM} from './stateMachine.js';
 
 export function buildView(model, stateMachine) {
@@ -35,7 +36,8 @@ export function buildView(model, stateMachine) {
         elSizeParameterList = document.getElementById('sizeParameters'),
         elMazeShapeList = document.getElementById('shapeSelector'),
         elMazeAlgorithmList = document.getElementById('algorithmSelector'),
-        elAlgorithmDelayList = document.getElementById('delaySelector');
+        elAlgorithmDelayList = document.getElementById('delaySelector'),
+        elExitsList = document.getElementById('exitSelector');
         // elRefreshButton = document.getElementById('refreshMaze'),
         // elChangeMazeConfigButton = document.getElementById('changeMazeConfig'),
         // elPlayButton = document.getElementById('play'),
@@ -126,6 +128,20 @@ export function buildView(model, stateMachine) {
             elParamInput.value = value;
         },
 
+        // Exits
+        addExitConfiguration(description, value) {
+            const elExitsItem = document.createElement('li');
+            elExitsItem.innerHTML = description;
+            elExitsItem.onclick = () => eventTarget.trigger(EVENT_EXITS_SELECTED, value);
+            elExitsList.appendChild(elExitsItem);
+            elExitsItem.dataset.value = value;
+        },
+        setExitConfiguration(exitConfiguration) {
+            [...elExitsList.querySelectorAll('li')].forEach(el => {
+                el.classList.toggle('selected', el.dataset.value === exitConfiguration);
+            });
+        },
+
         // Algorithm Delay
         addAlgorithmDelay(description, value) {
             const elDelayItem = document.createElement('li');
@@ -161,6 +177,7 @@ export function buildView(model, stateMachine) {
             toggleElementVisibility(elMazeShapeList,      [STATE_INIT].includes(state));
             toggleElementVisibility(elMazeAlgorithmList,  [STATE_INIT].includes(state));
             toggleElementVisibility(elSizeParameterList,  [STATE_INIT].includes(state));
+            toggleElementVisibility(elExitsList,          [STATE_INIT].includes(state));
             toggleElementVisibility(elAlgorithmDelayList, [STATE_INIT].includes(state));
             toggleElementVisibility(elCreateMaskButton,   [STATE_INIT].includes(state));
 
