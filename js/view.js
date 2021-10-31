@@ -11,6 +11,7 @@ export const
     EVENT_SAVE_MASK_BUTTON_CLICKED = 'saveMaskButtonClicked',
     EVENT_CLEAR_MASK_BUTTON_CLICKED = 'clearMaskButtonClicked',
     EVENT_FINISH_RUNNING_BUTTON_CLICKED = 'finishRunningButtonClicked',
+    EVENT_CHANGE_PARAMS_BUTTON_CLICKED = 'changeParamsButtonClicked',
     EVENT_WINDOW_RESIZED = 'windowResized',
     EVENT_MAZE_CLICK = 'mazeClick';
 import {EVENT_CLICK} from '../../mazejs/web/js/drawingSurfaces.js';
@@ -29,6 +30,7 @@ export function buildView(model, stateMachine) {
         elSaveMaskButton = document.getElementById('saveMask'),
         elClearMaskButton = document.getElementById('clearMask'),
         elFinishRunningButton = document.getElementById('finishRunning'),
+        elChangeParamsButton = document.getElementById('changeParams'),
         elInfo = document.getElementById('info'),
         elSizeParameterList = document.getElementById('sizeParameters'),
         elMazeShapeList = document.getElementById('shapeSelector'),
@@ -63,6 +65,7 @@ export function buildView(model, stateMachine) {
     elSaveMaskButton.onclick = () => eventTarget.trigger(EVENT_SAVE_MASK_BUTTON_CLICKED);
     elClearMaskButton.onclick = () => eventTarget.trigger(EVENT_CLEAR_MASK_BUTTON_CLICKED);
     elFinishRunningButton.onclick = () => eventTarget.trigger(EVENT_FINISH_RUNNING_BUTTON_CLICKED);
+    elChangeParamsButton.onclick = () => eventTarget.trigger(EVENT_CHANGE_PARAMS_BUTTON_CLICKED);
 
     function fitCanvasToContainer() {
         elCanvas.width = elMazeContainer.clientWidth;
@@ -155,13 +158,15 @@ export function buildView(model, stateMachine) {
         },
 
         updateForNewState(state) {
-            toggleElementVisibility(elMazeShapeList,      [STATE_INIT, STATE_DISPLAYING].includes(state));
-            toggleElementVisibility(elMazeAlgorithmList,  [STATE_INIT, STATE_DISPLAYING].includes(state));
-            toggleElementVisibility(elSizeParameterList,  [STATE_INIT, STATE_DISPLAYING].includes(state));
-            toggleElementVisibility(elAlgorithmDelayList, [STATE_INIT, STATE_DISPLAYING].includes(state));
-            toggleElementVisibility(elGoButton,           [STATE_INIT, STATE_DISPLAYING].includes(state));
-            toggleElementVisibility(elCreateMaskButton,   [STATE_INIT, STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elMazeShapeList,      [STATE_INIT].includes(state));
+            toggleElementVisibility(elMazeAlgorithmList,  [STATE_INIT].includes(state));
+            toggleElementVisibility(elSizeParameterList,  [STATE_INIT].includes(state));
+            toggleElementVisibility(elAlgorithmDelayList, [STATE_INIT].includes(state));
+            toggleElementVisibility(elCreateMaskButton,   [STATE_INIT].includes(state));
 
+            toggleElementVisibility(elGoButton,           [STATE_INIT, STATE_DISPLAYING].includes(state));
+
+            toggleElementVisibility(elChangeParamsButton,    [STATE_DISPLAYING].includes(state));
             toggleElementVisibility(elShowDistanceMapButton, [STATE_DISPLAYING].includes(state));
 
             toggleElementVisibility(elClearDistanceMapButton, [STATE_DISTANCE_MAPPING].includes(state));

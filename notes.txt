@@ -1,9 +1,11 @@
 TODO
 ----
-Add common code for stepwise algorithm
+In displaying state hide all params
 Give mazes entrances and exits
 Add Play mode
 Display seed and allow user entry
+Add other algorithms
+
 
 Bugs
 ----

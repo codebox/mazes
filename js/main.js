@@ -6,7 +6,8 @@ import {shapes} from '../../mazejs/web/js/shapes.js';
 import {
     EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED,
     EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED, EVENT_CREATE_MASK_BUTTON_CLICKED,
-    EVENT_SAVE_MASK_BUTTON_CLICKED, EVENT_CLEAR_MASK_BUTTON_CLICKED, EVENT_FINISH_RUNNING_BUTTON_CLICKED, EVENT_DELAY_SELECTED
+    EVENT_SAVE_MASK_BUTTON_CLICKED, EVENT_CLEAR_MASK_BUTTON_CLICKED, EVENT_FINISH_RUNNING_BUTTON_CLICKED, EVENT_DELAY_SELECTED,
+    EVENT_CHANGE_PARAMS_BUTTON_CLICKED
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
@@ -232,6 +233,11 @@ window.onload = () => {
     view.on(EVENT_WINDOW_RESIZED, ifStateIs(STATE_INIT).then(event => {
         showEmptyGrid(false);
     }));
+
+    view.on(EVENT_CHANGE_PARAMS_BUTTON_CLICKED, () => {
+        showEmptyGrid(true);
+        stateMachine.init();
+    });
 
     // view.on(EVENT_WINDOW_RESIZED).then(renderMaze);
 
