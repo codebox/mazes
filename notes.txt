@@ -1,13 +1,19 @@
 TODO
 ----
-In displaying state hide all params
-Give mazes entrances and exits
+Split maze types into separate files
 Add Play mode
 Display seed and allow user entry
 Add other algorithms
-
+Make config area scrollable
+Check all info msgs still make sense
+Create Mask -> Edit Mask if applicable
+Validate masks before saving
+Add arrows to solution path
 
 Bugs
 ----
 Some algorithms break if a mask is applied (Square, Sidewinder, mask TL corner) and others generate invalid mazes
 Resizing window breaks maze for certain states
+Thin white lines between squares in distance map
+Solution path does not reach exit walls
+

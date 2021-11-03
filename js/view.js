@@ -12,6 +12,7 @@ export const
     EVENT_CLEAR_MASK_BUTTON_CLICKED = 'clearMaskButtonClicked',
     EVENT_FINISH_RUNNING_BUTTON_CLICKED = 'finishRunningButtonClicked',
     EVENT_CHANGE_PARAMS_BUTTON_CLICKED = 'changeParamsButtonClicked',
+    EVENT_SOLVE_BUTTON_CLICKED = 'solveButtonClicked',
     EVENT_WINDOW_RESIZED = 'windowResized',
     EVENT_EXITS_SELECTED = 'exitsSelected';
 
@@ -31,6 +32,7 @@ export function buildView(model, stateMachine) {
         elSaveMaskButton = document.getElementById('saveMask'),
         elClearMaskButton = document.getElementById('clearMask'),
         elFinishRunningButton = document.getElementById('finishRunning'),
+        elSolveButton = document.getElementById('solve'),
         elChangeParamsButton = document.getElementById('changeParams'),
         elInfo = document.getElementById('info'),
         elSizeParameterList = document.getElementById('sizeParameters'),
@@ -68,6 +70,7 @@ export function buildView(model, stateMachine) {
     elClearMaskButton.onclick = () => eventTarget.trigger(EVENT_CLEAR_MASK_BUTTON_CLICKED);
     elFinishRunningButton.onclick = () => eventTarget.trigger(EVENT_FINISH_RUNNING_BUTTON_CLICKED);
     elChangeParamsButton.onclick = () => eventTarget.trigger(EVENT_CHANGE_PARAMS_BUTTON_CLICKED);
+    elSolveButton.onclick = () => eventTarget.trigger(EVENT_SOLVE_BUTTON_CLICKED);
 
     function fitCanvasToContainer() {
         elCanvas.width = elMazeContainer.clientWidth;
@@ -185,6 +188,7 @@ export function buildView(model, stateMachine) {
 
             toggleElementVisibility(elChangeParamsButton,    [STATE_DISPLAYING].includes(state));
             toggleElementVisibility(elShowDistanceMapButton, [STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elSolveButton,           [STATE_DISPLAYING].includes(state));
 
             toggleElementVisibility(elClearDistanceMapButton, [STATE_DISTANCE_MAPPING].includes(state));
 

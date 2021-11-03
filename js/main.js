@@ -7,11 +7,11 @@ import {
     EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED,
     EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED, EVENT_CREATE_MASK_BUTTON_CLICKED,
     EVENT_SAVE_MASK_BUTTON_CLICKED, EVENT_CLEAR_MASK_BUTTON_CLICKED, EVENT_FINISH_RUNNING_BUTTON_CLICKED, EVENT_DELAY_SELECTED,
-    EVENT_CHANGE_PARAMS_BUTTON_CLICKED, EVENT_EXITS_SELECTED
+    EVENT_CHANGE_PARAMS_BUTTON_CLICKED, EVENT_EXITS_SELECTED, EVENT_SOLVE_BUTTON_CLICKED
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
-import {ALGORITHM_NONE, METADATA_MASKED, EVENT_CLICK, EXITS_NONE, EXITS_HARDEST, EXITS_HORIZONTAL, EXITS_VERTICAL} from '../../mazejs/web/js/constants.js';
+import {ALGORITHM_NONE, METADATA_MASKED, METADATA_END_CELL, METADATA_START_CELL, EVENT_CLICK, EXITS_NONE, EXITS_HARDEST, EXITS_HORIZONTAL, EXITS_VERTICAL} from '../../mazejs/web/js/constants.js';
 
 window.onload = () => {
     "use strict";
@@ -251,6 +251,22 @@ window.onload = () => {
     view.on(EVENT_CHANGE_PARAMS_BUTTON_CLICKED, () => {
         showEmptyGrid(true);
         stateMachine.init();
+    });
+
+    view.on(EVENT_SOLVE_BUTTON_CLICKED, () => {
+        let startCell, endCell;
+        model.maze.forEachCell(cell => {
+            if (cell.metadata[METADATA_START_CELL]) {
+                startCell = cell;
+            }
+            if (cell.metadata[METADATA_END_CELL]) {
+                endCell = cell;
+            }
+        });
+        console.assert(startCell);
+        console.assert(endCell);
+        model.maze.findPathBetween(startCell.coords, endCell.coords);
+        model.maze.render();
     });
 
     // view.on(EVENT_WINDOW_RESIZED).then(renderMaze);
