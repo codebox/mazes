@@ -7,11 +7,16 @@ import {
     EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED,
     EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED, EVENT_CREATE_MASK_BUTTON_CLICKED,
     EVENT_SAVE_MASK_BUTTON_CLICKED, EVENT_CLEAR_MASK_BUTTON_CLICKED, EVENT_FINISH_RUNNING_BUTTON_CLICKED, EVENT_DELAY_SELECTED,
-    EVENT_CHANGE_PARAMS_BUTTON_CLICKED, EVENT_EXITS_SELECTED, EVENT_SOLVE_BUTTON_CLICKED
+    EVENT_CHANGE_PARAMS_BUTTON_CLICKED, EVENT_EXITS_SELECTED, EVENT_SOLVE_BUTTON_CLICKED, EVENT_PLAY_BUTTON_CLICKED, EVENT_STOP_BUTTON_CLICKED,
+    EVENT_KEY_PRESS
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
-import {ALGORITHM_NONE, METADATA_MASKED, METADATA_END_CELL, METADATA_START_CELL, EVENT_CLICK, EXITS_NONE, EXITS_HARDEST, EXITS_HORIZONTAL, EXITS_VERTICAL} from '../../mazejs/web/js/constants.js';
+import {
+    ALGORITHM_NONE, METADATA_MASKED, METADATA_END_CELL, METADATA_START_CELL, EVENT_CLICK, EXITS_NONE, EXITS_HARDEST, EXITS_HORIZONTAL, EXITS_VERTICAL,
+    METADATA_PLAYER_CURRENT, METADATA_PLAYER_VISITED,
+    DIRECTION_NORTH, DIRECTION_SOUTH, DIRECTION_EAST, DIRECTION_WEST
+} from '../../mazejs/web/js/constants.js';
 
 window.onload = () => {
     "use strict";
@@ -253,7 +258,7 @@ window.onload = () => {
         stateMachine.init();
     });
 
-    view.on(EVENT_SOLVE_BUTTON_CLICKED, () => {
+    function findStartAndEndCells() {
         let startCell, endCell;
         model.maze.forEachCell(cell => {
             if (cell.metadata[METADATA_START_CELL]) {
@@ -263,11 +268,85 @@ window.onload = () => {
                 endCell = cell;
             }
         });
+        return [startCell, endCell];
+    }
+    view.on(EVENT_SOLVE_BUTTON_CLICKED, () => {
+        const [startCell, endCell] = findStartAndEndCells();
         console.assert(startCell);
         console.assert(endCell);
         model.maze.findPathBetween(startCell.coords, endCell.coords);
         model.maze.render();
     });
+
+    view.on(EVENT_PLAY_BUTTON_CLICKED, () => {
+        const [startCell, endCell] = findStartAndEndCells();
+        if (!(startCell && endCell)) {
+            alert('You must generate a maze with exits in order to play');
+            return;
+        }
+        model.playState = {startCell, endCell, currentCell: startCell};
+        startCell.metadata[METADATA_PLAYER_CURRENT] = true;
+        model.maze.render();
+        stateMachine.playing();
+    });
+
+    view.on(EVENT_STOP_BUTTON_CLICKED, () => {
+        stateMachine.displaying();
+    });
+
+    const keyCodeToDirection = {
+        38: DIRECTION_NORTH,
+        40: DIRECTION_SOUTH,
+        39: DIRECTION_EAST,
+        37: DIRECTION_WEST
+    };
+
+    const reverseDirections = {
+        [DIRECTION_NORTH]: DIRECTION_SOUTH,
+        [DIRECTION_SOUTH]: DIRECTION_NORTH,
+        [DIRECTION_EAST]: DIRECTION_WEST,
+        [DIRECTION_WEST]: DIRECTION_EAST
+    };
+
+    view.on(EVENT_KEY_PRESS, ifStateIs(STATE_PLAYING).then(event => {
+        const {keyCode, shift, ctrl} = event;
+        let direction = keyCodeToDirection[keyCode],
+            currentCell = model.playState.currentCell;
+
+        if (!direction) {
+            return;
+        }
+
+        function moveTo(targetCell) {
+            delete currentCell.metadata[METADATA_PLAYER_CURRENT];
+            currentCell.metadata[METADATA_PLAYER_VISITED] = true;
+            targetCell.metadata[METADATA_PLAYER_CURRENT] = true;
+            model.playState.currentCell = targetCell;
+            currentCell = targetCell;
+        }
+
+        while (true) {
+            const nextCell = currentCell.neighbours[direction],
+                moveOk = nextCell && nextCell.isLinkedTo(currentCell);
+            if (moveOk) {
+                moveTo(nextCell);
+                if (!shift) {
+                    break;
+                } else if (ctrl) {
+                    const linkedDirections = currentCell.neighbours.linkedDirections();
+                    if (linkedDirections.length === 2) {
+                        direction = linkedDirections.find(neighbourDirection => neighbourDirection !== reverseDirections[direction]);
+                    } else {
+                        break;
+                    }
+                }
+
+            } else {
+                break;
+            }
+        }
+        model.maze.render();
+    }));
 
     // view.on(EVENT_WINDOW_RESIZED).then(renderMaze);
 

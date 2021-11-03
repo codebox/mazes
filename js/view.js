@@ -13,6 +13,9 @@ export const
     EVENT_FINISH_RUNNING_BUTTON_CLICKED = 'finishRunningButtonClicked',
     EVENT_CHANGE_PARAMS_BUTTON_CLICKED = 'changeParamsButtonClicked',
     EVENT_SOLVE_BUTTON_CLICKED = 'solveButtonClicked',
+    EVENT_PLAY_BUTTON_CLICKED = 'playButtonClicked',
+    EVENT_STOP_BUTTON_CLICKED = 'stopButtonClicked',
+    EVENT_KEY_PRESS = 'keyPress',
     EVENT_WINDOW_RESIZED = 'windowResized',
     EVENT_EXITS_SELECTED = 'exitsSelected';
 
@@ -33,6 +36,8 @@ export function buildView(model, stateMachine) {
         elClearMaskButton = document.getElementById('clearMask'),
         elFinishRunningButton = document.getElementById('finishRunning'),
         elSolveButton = document.getElementById('solve'),
+        elPlayButton = document.getElementById('play'),
+        elStopButton = document.getElementById('stop'),
         elChangeParamsButton = document.getElementById('changeParams'),
         elInfo = document.getElementById('info'),
         elSizeParameterList = document.getElementById('sizeParameters'),
@@ -71,6 +76,10 @@ export function buildView(model, stateMachine) {
     elFinishRunningButton.onclick = () => eventTarget.trigger(EVENT_FINISH_RUNNING_BUTTON_CLICKED);
     elChangeParamsButton.onclick = () => eventTarget.trigger(EVENT_CHANGE_PARAMS_BUTTON_CLICKED);
     elSolveButton.onclick = () => eventTarget.trigger(EVENT_SOLVE_BUTTON_CLICKED);
+    elPlayButton.onclick = () => eventTarget.trigger(EVENT_PLAY_BUTTON_CLICKED);
+    elStopButton.onclick = () => eventTarget.trigger(EVENT_STOP_BUTTON_CLICKED);
+
+    window.onkeydown = event => eventTarget.trigger(EVENT_KEY_PRESS, {keyCode: event.keyCode, ctrl: event.ctrlKey, shift: event.shiftKey});
 
     function fitCanvasToContainer() {
         elCanvas.width = elMazeContainer.clientWidth;
@@ -189,6 +198,8 @@ export function buildView(model, stateMachine) {
             toggleElementVisibility(elChangeParamsButton,    [STATE_DISPLAYING].includes(state));
             toggleElementVisibility(elShowDistanceMapButton, [STATE_DISPLAYING].includes(state));
             toggleElementVisibility(elSolveButton,           [STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elPlayButton,            [STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elStopButton,            [STATE_PLAYING].includes(state));
 
             toggleElementVisibility(elClearDistanceMapButton, [STATE_DISTANCE_MAPPING].includes(state));
 

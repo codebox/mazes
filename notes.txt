@@ -9,6 +9,7 @@ Check all info msgs still make sense
 Create Mask -> Edit Mask if applicable
 Validate masks before saving
 Add arrows to solution path
+TO DO comments in both projects
 
 Bugs
 ----
