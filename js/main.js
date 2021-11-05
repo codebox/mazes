@@ -284,6 +284,7 @@ window.onload = () => {
             alert('You must generate a maze with exits in order to play');
             return;
         }
+        model.maze.clearPathAndSolution();
         model.playState = {startCell, endCell, currentCell: startCell};
         startCell.metadata[METADATA_PLAYER_CURRENT] = true;
         model.maze.render();
