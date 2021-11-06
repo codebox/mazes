@@ -14,7 +14,7 @@ import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
 import {
     ALGORITHM_NONE, METADATA_MASKED, METADATA_END_CELL, METADATA_START_CELL, EVENT_CLICK, EXITS_NONE, EXITS_HARDEST, EXITS_HORIZONTAL, EXITS_VERTICAL,
-    METADATA_PLAYER_CURRENT, METADATA_PLAYER_VISITED,
+    METADATA_PLAYER_CURRENT, METADATA_PLAYER_VISITED, METADATA_PATH,
     DIRECTION_NORTH, DIRECTION_SOUTH, DIRECTION_EAST, DIRECTION_WEST
 } from '../../mazejs/web/js/constants.js';
 
@@ -141,6 +141,13 @@ window.onload = () => {
         maze.on(EVENT_CLICK, ifStateIs(STATE_MASKING).then(event => {
             const cell = maze.getCellByCoordinates(event.coords);
             cell.metadata[METADATA_MASKED] = !cell.metadata[METADATA_MASKED];
+            maze.render();
+        }));
+
+        maze.on(EVENT_CLICK, ifStateIs(STATE_PLAYING).then(event => {
+            const currentCell = model.playState.currentCell,
+                direction = maze.getClosestDirectionForClick(currentCell, event);
+            navigate(direction);
             maze.render();
         }));
 
@@ -285,8 +292,9 @@ window.onload = () => {
             return;
         }
         model.maze.clearPathAndSolution();
-        model.playState = {startCell, endCell, currentCell: startCell};
+        model.playState = {startCell, endCell, currentCell: startCell, startTime: Date.now()};
         startCell.metadata[METADATA_PLAYER_CURRENT] = true;
+        startCell.metadata[METADATA_PLAYER_VISITED] = true;
         model.maze.render();
         stateMachine.playing();
     });
@@ -309,32 +317,84 @@ window.onload = () => {
         [DIRECTION_WEST]: DIRECTION_EAST
     };
 
+    function padNum(num) {
+        return num < 10 ? '0' + num : num;
+    }
+    function formatTime(millis) {
+        const hours = Math.floor(millis / (1000 * 60 * 60)),
+            minutes = Math.floor((millis % (1000 * 60 * 60)) / (1000 * 60)),
+            seconds = Math.floor((millis % (1000 * 60)) / 1000);
+
+        return `${padNum(hours)}:${padNum(minutes)}:${padNum(seconds)}`;
+    }
+
+    function onMazeCompleted() {
+        const timeMs = Date.now() - model.playState.startTime,
+            time = formatTime(timeMs),
+            {startCell, endCell} = model.playState;
+
+        model.playState.finished = true;
+
+        model.maze.findPathBetween(startCell.coords, endCell.coords);
+        const optimalPathLength = model.maze.metadata[METADATA_PATH].length;
+        delete model.maze.metadata[METADATA_PATH];
+
+        let visitedCells = 0;
+        model.maze.forEachCell(cell => {
+            if (cell.metadata[METADATA_PLAYER_VISITED]) {
+                visitedCells++;
+            }
+        });
+
+        const cellsPerSecond = visitedCells / (timeMs / 1000);
+        model.maze.render();
+        stateMachine.displaying();
+        view.showInfo(`
+            Finish Time: ${time}<br>
+            Visited Cells: ${visitedCells}<br>
+            Optimal Route: ${optimalPathLength}<br><br>
+            Optimality: <em>${Math.floor(100 * optimalPathLength / visitedCells)}%</em><br>
+            Cells per Second: <em>${Math.round(cellsPerSecond)}</em>
+        `);
+    }
+
+    function navigate(direction) {
+        const currentCell = model.playState.currentCell,
+            targetCell = currentCell.neighbours[direction],
+            moveOk = targetCell && targetCell.isLinkedTo(currentCell);
+
+        if (moveOk) {
+            delete currentCell.metadata[METADATA_PLAYER_CURRENT];
+            targetCell.metadata[METADATA_PLAYER_VISITED] = true;
+            targetCell.metadata[METADATA_PLAYER_CURRENT] = true;
+            model.playState.currentCell = targetCell;
+
+            if (targetCell.metadata[METADATA_END_CELL]) {
+                onMazeCompleted();
+            }
+        }
+
+        return moveOk;
+    }
+
     view.on(EVENT_KEY_PRESS, ifStateIs(STATE_PLAYING).then(event => {
         const {keyCode, shift, ctrl} = event;
-        let direction = keyCodeToDirection[keyCode],
-            currentCell = model.playState.currentCell;
+        let direction = keyCodeToDirection[keyCode];
 
         if (!direction) {
             return;
         }
 
-        function moveTo(targetCell) {
-            delete currentCell.metadata[METADATA_PLAYER_CURRENT];
-            currentCell.metadata[METADATA_PLAYER_VISITED] = true;
-            targetCell.metadata[METADATA_PLAYER_CURRENT] = true;
-            model.playState.currentCell = targetCell;
-            currentCell = targetCell;
-        }
-
         while (true) {
-            const nextCell = currentCell.neighbours[direction],
-                moveOk = nextCell && nextCell.isLinkedTo(currentCell);
-            if (moveOk) {
-                moveTo(nextCell);
-                if (!shift) {
+            const moveWasValid = navigate(direction),
+                newCurrentCell = model.playState.currentCell;
+            if (moveWasValid) {
+                if (model.playState.finished) {
+                    break;
+                } else if (!shift) {
                     break;
                 } else if (ctrl) {
-                    const linkedDirections = currentCell.neighbours.linkedDirections();
+                    const linkedDirections = newCurrentCell.neighbours.linkedDirections();
                     if (linkedDirections.length === 2) {
                         direction = linkedDirections.find(neighbourDirection => neighbourDirection !== reverseDirections[direction]);
                     } else {

@@ -1,7 +1,13 @@
 TODO
 ----
+Key controls for Play mode - Square
+Key controls for Play mode - Triangle
+Key controls for Play mode - Hexagon
+Key controls for Play mode - Circle
 Split maze types into separate files
-Add Play mode
+Solve button should toggle solution on/off
+Reorder buttons, 'Build Maze' should always be in same place
+Distance Map should display some default map on first click
 Display seed and allow user entry
 Add other algorithms
 Make config area scrollable
@@ -11,10 +17,13 @@ Validate masks before saving
 Add arrows to solution path
 TO DO comments in both projects
 
+
 Bugs
 ----
 Some algorithms break if a mask is applied (Square, Sidewinder, mask TL corner) and others generate invalid mazes
+Circle maze breaks if center masked out
 Resizing window breaks maze for certain states
 Thin white lines between squares in distance map
 Solution path does not reach exit walls
+Possible to enter invalid size values
 

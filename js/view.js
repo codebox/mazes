@@ -232,6 +232,7 @@ export function buildView(model, stateMachine) {
         },
 
         showInfo(msg) {
+            toggleElementVisibility(elInfo, msg);
             elInfo.innerHTML = msg;
         },
 
