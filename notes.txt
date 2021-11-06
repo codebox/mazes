@@ -1,9 +1,8 @@
 TODO
 ----
-Key controls for Play mode - Square
-Key controls for Play mode - Triangle
 Key controls for Play mode - Hexagon
 Key controls for Play mode - Circle
+Make Shift/Ctrl keys work with click navigation as well
 Split maze types into separate files
 Solve button should toggle solution on/off
 Reorder buttons, 'Build Maze' should always be in same place
@@ -16,6 +15,7 @@ Create Mask -> Edit Mask if applicable
 Validate masks before saving
 Add arrows to solution path
 TO DO comments in both projects
+Download as SVG
 
 
 Bugs

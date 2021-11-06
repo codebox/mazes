@@ -15,7 +15,8 @@ import {algorithms} from '../../mazejs/web/js/algorithms.js';
 import {
     ALGORITHM_NONE, METADATA_MASKED, METADATA_END_CELL, METADATA_START_CELL, EVENT_CLICK, EXITS_NONE, EXITS_HARDEST, EXITS_HORIZONTAL, EXITS_VERTICAL,
     METADATA_PLAYER_CURRENT, METADATA_PLAYER_VISITED, METADATA_PATH,
-    DIRECTION_NORTH, DIRECTION_SOUTH, DIRECTION_EAST, DIRECTION_WEST
+    DIRECTION_NORTH, DIRECTION_SOUTH, DIRECTION_EAST, DIRECTION_WEST, DIRECTION_NORTH_WEST, DIRECTION_NORTH_EAST, DIRECTION_SOUTH_WEST, DIRECTION_SOUTH_EAST,
+    DIRECTION_CLOCKWISE, DIRECTION_ANTICLOCKWISE, DIRECTION_INWARDS, DIRECTION_OUTWARDS
 } from '../../mazejs/web/js/constants.js';
 
 window.onload = () => {
@@ -307,14 +308,16 @@ window.onload = () => {
         38: DIRECTION_NORTH,
         40: DIRECTION_SOUTH,
         39: DIRECTION_EAST,
-        37: DIRECTION_WEST
-    };
-
-    const reverseDirections = {
-        [DIRECTION_NORTH]: DIRECTION_SOUTH,
-        [DIRECTION_SOUTH]: DIRECTION_NORTH,
-        [DIRECTION_EAST]: DIRECTION_WEST,
-        [DIRECTION_WEST]: DIRECTION_EAST
+        37: DIRECTION_WEST,
+        65: DIRECTION_NORTH_WEST, // A
+        83: DIRECTION_NORTH_EAST, // S
+        90: DIRECTION_SOUTH_WEST, // Z
+        88: DIRECTION_SOUTH_EAST, // X
+        81: DIRECTION_CLOCKWISE,  // Q
+        87: DIRECTION_ANTICLOCKWISE, // W
+        80: DIRECTION_INWARDS, // P
+        76: `${DIRECTION_OUTWARDS}_1`, // L
+        186: `${DIRECTION_OUTWARDS}_0` // ;
     };
 
     function padNum(num) {
@@ -367,6 +370,7 @@ window.onload = () => {
             delete currentCell.metadata[METADATA_PLAYER_CURRENT];
             targetCell.metadata[METADATA_PLAYER_VISITED] = true;
             targetCell.metadata[METADATA_PLAYER_CURRENT] = true;
+            model.playState.previousCell = currentCell;
             model.playState.currentCell = targetCell;
 
             if (targetCell.metadata[METADATA_END_CELL]) {
@@ -380,6 +384,7 @@ window.onload = () => {
     view.on(EVENT_KEY_PRESS, ifStateIs(STATE_PLAYING).then(event => {
         const {keyCode, shift, ctrl} = event;
         let direction = keyCodeToDirection[keyCode];
+        console.log(keyCode, direction)
 
         if (!direction) {
             return;
@@ -396,7 +401,7 @@ window.onload = () => {
                 } else if (ctrl) {
                     const linkedDirections = newCurrentCell.neighbours.linkedDirections();
                     if (linkedDirections.length === 2) {
-                        direction = linkedDirections.find(neighbourDirection => neighbourDirection !== reverseDirections[direction]);
+                        direction = linkedDirections.find(neighbourDirection => newCurrentCell.neighbours[neighbourDirection] !== model.playState.previousCell);
                     } else {
                         break;
                     }
