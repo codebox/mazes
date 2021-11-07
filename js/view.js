@@ -185,6 +185,10 @@ export function buildView(model, stateMachine) {
             });
         },
 
+        toggleSolveButtonCaption(solve) {
+            elSolveButton.innerHTML = solve ? 'Solve' : 'Clear Solution';
+        },
+
         updateForNewState(state) {
             toggleElementVisibility(elMazeShapeList,      [STATE_INIT].includes(state));
             toggleElementVisibility(elMazeAlgorithmList,  [STATE_INIT].includes(state));
@@ -212,6 +216,7 @@ export function buildView(model, stateMachine) {
                     this.showInfo('Select parameters for your maze and then click <b>GO</b>');
                     break;
                 case STATE_DISPLAYING:
+                    this.toggleSolveButtonCaption(true);
                     this.showInfo('Click <b>GO</b> to generate a different maze');
                     break;
                 case STATE_DISTANCE_MAPPING:

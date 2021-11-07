@@ -279,10 +279,16 @@ window.onload = () => {
         return [startCell, endCell];
     }
     view.on(EVENT_SOLVE_BUTTON_CLICKED, () => {
-        const [startCell, endCell] = findStartAndEndCells();
-        console.assert(startCell);
-        console.assert(endCell);
-        model.maze.findPathBetween(startCell.coords, endCell.coords);
+        if (model.maze.metadata[METADATA_PATH]) {
+            model.maze.clearPathAndSolution();
+            view.toggleSolveButtonCaption(true);
+        } else {
+            const [startCell, endCell] = findStartAndEndCells();
+            console.assert(startCell);
+            console.assert(endCell);
+            model.maze.findPathBetween(startCell.coords, endCell.coords);
+            view.toggleSolveButtonCaption(false);
+        }
         model.maze.render();
     });
 
