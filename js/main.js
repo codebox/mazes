@@ -15,7 +15,7 @@ import {algorithms} from '../../mazejs/web/js/algorithms.js';
 import {buildRandom} from '../../mazejs/web/js/random.js';
 import {
     ALGORITHM_NONE, METADATA_MASKED, METADATA_END_CELL, METADATA_START_CELL, EVENT_CLICK, EXITS_NONE, EXITS_HARDEST, EXITS_HORIZONTAL, EXITS_VERTICAL,
-    METADATA_PLAYER_CURRENT, METADATA_PLAYER_VISITED, METADATA_PATH,
+    METADATA_PLAYER_CURRENT, METADATA_PLAYER_VISITED, METADATA_PATH, METADATA_VISITED,
     DIRECTION_NORTH, DIRECTION_SOUTH, DIRECTION_EAST, DIRECTION_WEST, DIRECTION_NORTH_WEST, DIRECTION_NORTH_EAST, DIRECTION_SOUTH_WEST, DIRECTION_SOUTH_EAST,
     DIRECTION_CLOCKWISE, DIRECTION_ANTICLOCKWISE, DIRECTION_INWARDS, DIRECTION_OUTWARDS
 } from '../../mazejs/web/js/constants.js';
@@ -252,15 +252,57 @@ window.onload = () => {
         model.maze.render();
     });
 
-    view.on(EVENT_SAVE_MASK_BUTTON_CLICKED, () => {
-        stateMachine.init();
-        const mask = model.mask[getModelMaskKey()] = [];
+    function validateMask() {
+        const isNotMasked = cell => !cell.metadata[METADATA_MASKED],
+            startCell = model.maze.randomCell(isNotMasked);
+        let unmaskedCellCount = 0;
+
         model.maze.forEachCell(cell => {
-            if (cell.metadata[METADATA_MASKED]) {
-                mask.push(cell.coords);
+            if (isNotMasked(cell)) {
+                unmaskedCellCount++;
             }
         });
-        showEmptyGrid(true);
+        if (!startCell) {
+            throw 'No unmasked cells remain';
+        }
+        if (unmaskedCellCount < 4) {
+            throw 'Not enough unmasked cells to build a maze';
+        }
+
+        function countUnmasked(cell) {
+            cell.metadata[METADATA_VISITED] = true;
+            let count = 1;
+            cell.neighbours.toArray(isNotMasked).forEach(neighbourCell => {
+                if (!neighbourCell.metadata[METADATA_VISITED]) {
+                    count += countUnmasked(neighbourCell);
+                }
+            });
+            return count;
+        }
+
+        model.maze.forEachCell(cell => {
+            delete cell.metadata[METADATA_VISITED];
+        });
+
+        if (unmaskedCellCount !== countUnmasked(startCell)) {
+            throw 'Your mask has cut off one or more cells so they are not reachable from the rest of the maze.';
+        }
+    }
+
+    view.on(EVENT_SAVE_MASK_BUTTON_CLICKED, () => {
+        try {
+            validateMask();
+            stateMachine.init();
+            const mask = model.mask[getModelMaskKey()] = [];
+            model.maze.forEachCell(cell => {
+                if (cell.metadata[METADATA_MASKED]) {
+                    mask.push(cell.coords);
+                }
+            });
+            showEmptyGrid(true);
+        } catch (err) {
+            alert(err);
+        }
     });
 
     view.on(EVENT_CLEAR_MASK_BUTTON_CLICKED, () => {
