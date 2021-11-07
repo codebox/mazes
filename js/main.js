@@ -12,6 +12,7 @@ import {
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
+import {buildRandom} from '../../mazejs/web/js/random.js';
 import {
     ALGORITHM_NONE, METADATA_MASKED, METADATA_END_CELL, METADATA_START_CELL, EVENT_CLICK, EXITS_NONE, EXITS_HARDEST, EXITS_HORIZONTAL, EXITS_VERTICAL,
     METADATA_PLAYER_CURRENT, METADATA_PLAYER_VISITED, METADATA_PATH,
@@ -63,8 +64,10 @@ window.onload = () => {
         });
 
         view.on(EVENT_SIZE_PARAMETER_CHANGED, data => {
-            onParameterChanged(data.name, data.value);
-            showEmptyGrid(true);
+            if (view.getValidSizeParameters().includes(data.name)) {
+                onParameterChanged(data.name, data.value);
+                showEmptyGrid(true);
+            }
         });
     }
 
@@ -196,11 +199,18 @@ window.onload = () => {
     }
 
     view.on(EVENT_GO_BUTTON_CLICKED, () => {
-        model.randomSeed = Date.now();
-        buildMazeUsingModel().then(() => {
-            model.maze.render();
-            stateMachine.displaying();
-        });
+        model.randomSeed = Number(view.getSeed() || buildRandom().int(Math.pow(10,9)));
+        view.showSeedValue();
+
+        const errors = view.inputErrorMessage();
+        if (errors) {
+            alert(errors);
+        } else {
+            buildMazeUsingModel().then(() => {
+                model.maze.render();
+                stateMachine.displaying();
+            });
+        }
     });
     view.on(EVENT_SHOW_MAP_BUTTON_CLICKED, () => {
         stateMachine.distanceMapping();

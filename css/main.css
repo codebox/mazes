@@ -37,6 +37,9 @@ html, body {
     overflow: hidden;
     user-select: none;
 }
+#info{
+    user-select: text;
+}
 #sidebarContainer li.selected, p.selected {
     background-color: var(--alt-colour);
     color: white;
@@ -110,12 +113,15 @@ div#details em {
     font-style: normal;
     color: var(--alt-colour);
 }
-#sizeParameters label {
+ul label {
     display: inline-block;
     width: 50px;
 }
 #shapeSelector li, #sizeParameters label {
     text-transform: capitalize;
+}
+#seedInput {
+    width: 100px;
 }
 @media screen and (max-width: 500px) {
     #container {

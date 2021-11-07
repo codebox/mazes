@@ -1,7 +1,6 @@
 TODO
 ----
 Reorder buttons, 'Build Maze' should always be in same place
-Display seed and allow user entry
 Add other algorithms
 Make config area scrollable
 Check all info msgs still make sense (include key codes and ctrl-shift)
@@ -20,5 +19,4 @@ Circle maze breaks if center masked out
 Resizing window breaks maze for certain states
 Thin white lines between squares in distance map
 Solution path does not reach exit walls
-Possible to enter invalid size values
 

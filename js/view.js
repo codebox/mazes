@@ -40,7 +40,9 @@ export function buildView(model, stateMachine) {
         elStopButton = document.getElementById('stop'),
         elChangeParamsButton = document.getElementById('changeParams'),
         elInfo = document.getElementById('info'),
+        elSeedInput = document.getElementById('seedInput'),
         elSizeParameterList = document.getElementById('sizeParameters'),
+        elSeedParameterList = document.getElementById('seedParameters'),
         elMazeShapeList = document.getElementById('shapeSelector'),
         elMazeAlgorithmList = document.getElementById('algorithmSelector'),
         elAlgorithmDelayList = document.getElementById('delaySelector'),
@@ -59,15 +61,7 @@ export function buildView(model, stateMachine) {
         // imgPlayer = new Image(),
         // imgExit = new Image(),
 
-    elGoButton.onclick = () => {
-        const allParametersValid = [...elSizeParameterList.querySelectorAll('input')].every(el => el.checkValidity());
-        if (allParametersValid) {
-            eventTarget.trigger(EVENT_GO_BUTTON_CLICKED);
-        } else {
-            alert('bad params'); //TODO
-        }
-    };
-
+    elGoButton.onclick = () => eventTarget.trigger(EVENT_GO_BUTTON_CLICKED);
     elShowDistanceMapButton.onclick = () => eventTarget.trigger(EVENT_SHOW_MAP_BUTTON_CLICKED);
     elClearDistanceMapButton.onclick = () => eventTarget.trigger(EVENT_CLEAR_MAP_BUTTON_CLICKED);
     elCreateMaskButton.onclick = () => eventTarget.trigger(EVENT_CREATE_MASK_BUTTON_CLICKED);
@@ -189,10 +183,35 @@ export function buildView(model, stateMachine) {
             elSolveButton.innerHTML = solve ? 'Solve' : 'Clear Solution';
         },
 
+        getSeed() {
+            return elSeedInput.value;
+        },
+
+        getValidSizeParameters() {
+            return [...elSizeParameterList.querySelectorAll('input')].filter(elInput => elInput.checkValidity()).map(el => el.dataset.value);
+        },
+
+        inputErrorMessage() {
+            const errors = [];
+
+            [...elSizeParameterList.querySelectorAll('input')].forEach(elInput => {
+                if (!elInput.checkValidity()) {
+                    errors.push(`Enter a number between ${elInput.min} and ${elInput.max} for ${elInput.dataset.value}`);
+                }
+            });
+
+            if (!elSeedInput.checkValidity()) {
+                errors.push('Enter between 1 and 9 digits for the Seed');
+            }
+
+            return errors.join('\n');
+        },
+
         updateForNewState(state) {
             toggleElementVisibility(elMazeShapeList,      [STATE_INIT].includes(state));
             toggleElementVisibility(elMazeAlgorithmList,  [STATE_INIT].includes(state));
             toggleElementVisibility(elSizeParameterList,  [STATE_INIT].includes(state));
+            toggleElementVisibility(elSeedParameterList,  [STATE_INIT].includes(state));
             toggleElementVisibility(elExitsList,          [STATE_INIT].includes(state));
             toggleElementVisibility(elAlgorithmDelayList, [STATE_INIT].includes(state));
             toggleElementVisibility(elCreateMaskButton,   [STATE_INIT].includes(state));
@@ -216,8 +235,8 @@ export function buildView(model, stateMachine) {
                     this.showInfo('Select parameters for your maze and then click <b>GO</b>');
                     break;
                 case STATE_DISPLAYING:
+                    this.showSeedValue();
                     this.toggleSolveButtonCaption(true);
-                    this.showInfo('Click <b>GO</b> to generate a different maze');
                     break;
                 case STATE_DISTANCE_MAPPING:
                     this.showInfo('Click somewhere in the maze to generate a distance map for that location.<br><br>Cells are coloured according to how difficult they are to reach from your chosen point.');
@@ -236,6 +255,9 @@ export function buildView(model, stateMachine) {
             }
         },
 
+        showSeedValue() {
+            this.showInfo(`Seed Value:<br><b>${model.randomSeed}</b>`);
+        },
         showInfo(msg) {
             toggleElementVisibility(elInfo, msg);
             elInfo.innerHTML = msg;
