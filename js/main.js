@@ -148,7 +148,7 @@ window.onload = () => {
         maze.on(EVENT_CLICK, ifStateIs(STATE_PLAYING).then(event => {
             const currentCell = model.playState.currentCell,
                 direction = maze.getClosestDirectionForClick(currentCell, event);
-            navigate(direction);
+            navigate(direction, event.shift, event.ctrl);
             maze.render();
         }));
 
@@ -361,47 +361,31 @@ window.onload = () => {
         `);
     }
 
-    function navigate(direction) {
-        const currentCell = model.playState.currentCell,
-            targetCell = currentCell.neighbours[direction],
-            moveOk = targetCell && targetCell.isLinkedTo(currentCell);
-
-        if (moveOk) {
-            delete currentCell.metadata[METADATA_PLAYER_CURRENT];
-            targetCell.metadata[METADATA_PLAYER_VISITED] = true;
-            targetCell.metadata[METADATA_PLAYER_CURRENT] = true;
-            model.playState.previousCell = currentCell;
-            model.playState.currentCell = targetCell;
-
-            if (targetCell.metadata[METADATA_END_CELL]) {
-                onMazeCompleted();
-            }
-        }
-
-        return moveOk;
-    }
-
-    view.on(EVENT_KEY_PRESS, ifStateIs(STATE_PLAYING).then(event => {
-        const {keyCode, shift, ctrl} = event;
-        let direction = keyCodeToDirection[keyCode];
-        console.log(keyCode, direction)
-
-        if (!direction) {
-            return;
-        }
-
+    function navigate(direction, shift, ctrl) {
         while (true) {
-            const moveWasValid = navigate(direction),
-                newCurrentCell = model.playState.currentCell;
-            if (moveWasValid) {
+            const currentCell = model.playState.currentCell,
+                targetCell = currentCell.neighbours[direction],
+                moveOk = targetCell && targetCell.isLinkedTo(currentCell);
+
+            if (moveOk) {
+                delete currentCell.metadata[METADATA_PLAYER_CURRENT];
+                targetCell.metadata[METADATA_PLAYER_VISITED] = true;
+                targetCell.metadata[METADATA_PLAYER_CURRENT] = true;
+                model.playState.previousCell = currentCell;
+                model.playState.currentCell = targetCell;
+
+                if (targetCell.metadata[METADATA_END_CELL]) {
+                    onMazeCompleted();
+                }
+
                 if (model.playState.finished) {
                     break;
                 } else if (!shift) {
                     break;
                 } else if (ctrl) {
-                    const linkedDirections = newCurrentCell.neighbours.linkedDirections();
+                    const linkedDirections = targetCell.neighbours.linkedDirections();
                     if (linkedDirections.length === 2) {
-                        direction = linkedDirections.find(neighbourDirection => newCurrentCell.neighbours[neighbourDirection] !== model.playState.previousCell);
+                        direction = linkedDirections.find(neighbourDirection => targetCell.neighbours[neighbourDirection] !== model.playState.previousCell);
                     } else {
                         break;
                     }
@@ -411,6 +395,14 @@ window.onload = () => {
                 break;
             }
         }
+    }
+
+    view.on(EVENT_KEY_PRESS, ifStateIs(STATE_PLAYING).then(event => {
+        const {keyCode, shift, ctrl} = event,
+            direction = keyCodeToDirection[keyCode];
+
+        navigate(direction, shift, ctrl);
+
         model.maze.render();
     }));
 

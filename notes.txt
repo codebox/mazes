@@ -1,19 +1,16 @@
 TODO
 ----
-Key controls for Play mode - Hexagon
-Key controls for Play mode - Circle
-Make Shift/Ctrl keys work with click navigation as well
-Split maze types into separate files
 Solve button should toggle solution on/off
 Reorder buttons, 'Build Maze' should always be in same place
 Distance Map should display some default map on first click
 Display seed and allow user entry
 Add other algorithms
 Make config area scrollable
-Check all info msgs still make sense
+Check all info msgs still make sense (include key codes and ctrl-shift)
 Create Mask -> Edit Mask if applicable
 Validate masks before saving
 Add arrows to solution path
+Split maze types into separate files
 TO DO comments in both projects
 Download as SVG
 
