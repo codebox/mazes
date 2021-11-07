@@ -202,7 +202,13 @@ window.onload = () => {
             stateMachine.displaying();
         });
     });
-    view.on(EVENT_SHOW_MAP_BUTTON_CLICKED, () => stateMachine.distanceMapping());
+    view.on(EVENT_SHOW_MAP_BUTTON_CLICKED, () => {
+        stateMachine.distanceMapping();
+        const [startCell, _1] = findStartAndEndCells(),
+            coords = (startCell || model.maze.randomCell()).coords;
+        model.maze.findDistancesFrom(...coords);
+        model.maze.render();
+    });
     view.on(EVENT_CLEAR_MAP_BUTTON_CLICKED, () => {
         stateMachine.displaying();
         model.maze.clearDistances();
@@ -279,6 +285,11 @@ window.onload = () => {
         return [startCell, endCell];
     }
     view.on(EVENT_SOLVE_BUTTON_CLICKED, () => {
+        const [startCell, endCell] = findStartAndEndCells();
+        if (!(startCell && endCell)) {
+            alert('You must generate a maze with exits in order to solve');
+            return;
+        }
         if (model.maze.metadata[METADATA_PATH]) {
             model.maze.clearPathAndSolution();
             view.toggleSolveButtonCaption(true);

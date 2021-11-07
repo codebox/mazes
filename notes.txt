@@ -1,8 +1,6 @@
 TODO
 ----
-Solve button should toggle solution on/off
 Reorder buttons, 'Build Maze' should always be in same place
-Distance Map should display some default map on first click
 Display seed and allow user entry
 Add other algorithms
 Make config area scrollable
