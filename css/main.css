@@ -34,7 +34,7 @@ html, body {
     flex: 0 0 220px;
     padding: var(--narrow-margin);
     border: 1px solid var(--border-colour);
-    overflow: hidden;
+    overflow-y: scroll;
     user-select: none;
 }
 #info{
@@ -122,6 +122,9 @@ ul label {
 }
 #seedInput {
     width: 100px;
+}
+#play, #changeParams {
+    margin-top: var(--wide-margin);
 }
 @media screen and (max-width: 500px) {
     #container {
