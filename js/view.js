@@ -63,7 +63,7 @@ export function buildView(model, stateMachine) {
     elStopButton.onclick = () => eventTarget.trigger(EVENT_STOP_BUTTON_CLICKED);
     elDownloadButton.onclick = () => eventTarget.trigger(EVENT_DOWNLOAD_CLICKED);
 
-    window.onkeydown = event => eventTarget.trigger(EVENT_KEY_PRESS, {keyCode: event.keyCode, ctrl: event.ctrlKey, shift: event.shiftKey});
+    window.onkeydown = event => eventTarget.trigger(EVENT_KEY_PRESS, {keyCode: event.keyCode, alt: event.altKey, shift: event.shiftKey});
 
     function fitCanvasToContainer() {
         elCanvas.width = elMazeContainer.clientWidth;
