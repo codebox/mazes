@@ -216,6 +216,7 @@ window.onload = () => {
             alert(errors);
         } else {
             buildMazeUsingModel().then(() => {
+                view.toggleSolveButtonCaption(true);
                 model.maze.render();
                 stateMachine.displaying();
             });

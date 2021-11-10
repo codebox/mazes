@@ -14,4 +14,3 @@ Some algorithms break if a mask is applied (Square, Sidewinder, mask TL corner) 
 Circle maze breaks if center masked out
 Resizing window breaks maze for certain states
 Thin white lines between squares in distance map
-Clicking New Maze while Solution is shown should reset 'Clear Solution' caption
