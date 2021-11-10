@@ -232,7 +232,7 @@ export function buildView(model, stateMachine) {
 
             switch(state) {
                 case STATE_INIT:
-                    this.showInfo('Select parameters for your maze and then click <b>GO</b>');
+                    this.showInfo('Select parameters for your maze and then click <b>New Maze</b>');
                     break;
                 case STATE_DISPLAYING:
                     this.showSeedValue();
@@ -261,6 +261,9 @@ export function buildView(model, stateMachine) {
         showInfo(msg) {
             toggleElementVisibility(elInfo, msg);
             elInfo.innerHTML = msg;
+        },
+        setNavigationInstructions(instructions) {
+            this.showInfo(instructions);
         },
 
         on(eventName, handler) {
