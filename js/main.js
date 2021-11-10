@@ -3,12 +3,13 @@ import {buildView} from './view.js';
 import {buildMaze} from '../../mazejs/web/js/main.js';
 import {buildStateMachine, STATE_INIT, STATE_DISPLAYING, STATE_PLAYING, STATE_MASKING, STATE_DISTANCE_MAPPING, STATE_RUNNING_ALGORITHM} from './stateMachine.js';
 import {shapes} from '../../mazejs/web/js/shapes.js';
+import {drawingSurfaces} from '../../mazejs/web/js/drawingSurfaces.js';
 import {
     EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED,
     EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED, EVENT_CREATE_MASK_BUTTON_CLICKED,
     EVENT_SAVE_MASK_BUTTON_CLICKED, EVENT_CLEAR_MASK_BUTTON_CLICKED, EVENT_FINISH_RUNNING_BUTTON_CLICKED, EVENT_DELAY_SELECTED,
     EVENT_CHANGE_PARAMS_BUTTON_CLICKED, EVENT_EXITS_SELECTED, EVENT_SOLVE_BUTTON_CLICKED, EVENT_PLAY_BUTTON_CLICKED, EVENT_STOP_BUTTON_CLICKED,
-    EVENT_KEY_PRESS
+    EVENT_KEY_PRESS, EVENT_DOWNLOAD_CLICKED
 } from './view.js';
 import {config} from './config.js';
 import {algorithms} from '../../mazejs/web/js/algorithms.js';
@@ -138,7 +139,7 @@ window.onload = () => {
                 grid,
                 'algorithm':  overrides.algorithm || model.algorithm,
                 'randomSeed' : model.randomSeed,
-                'element': document.getElementById('maze'),
+                'element': overrides.element || document.getElementById('maze'),
                 'mask': overrides.mask || model.mask[getModelMaskKey()],
                 'exitConfig': overrides.exitConfig || model.exitConfig
             });
@@ -498,4 +499,27 @@ window.onload = () => {
         model.maze.render();
     }));
 
+    view.on(EVENT_DOWNLOAD_CLICKED, () => {
+        function saveSvg(svgEl, name) {
+            const svgData = svgEl.outerHTML,
+                prolog = '<?xml version="1.0" standalone="no"?>',
+                blob = new Blob([prolog, svgData], {type: 'image/svg+xml;charset=utf-8'}),
+                blobAsUrl = URL.createObjectURL(blob),
+                downloadLink = document.createElement('a');
+            downloadLink.href = blobAsUrl;
+            downloadLink.download = name;
+            downloadLink.click();
+        }
+
+        const SVG_SIZE = 500,
+            elSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        elSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        elSvg.setAttribute('width', SVG_SIZE);
+        elSvg.setAttribute('height', SVG_SIZE);
+
+        const svgDrawingSurface = drawingSurfaces.svg({el: elSvg}),
+            fileName = `maze_${model.shape}_${Object.values(model.size).join('_')}_${model.randomSeed}.svg`;
+        model.maze.render(svgDrawingSurface);
+        saveSvg(elSvg, fileName);
+    });
 };

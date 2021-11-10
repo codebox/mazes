@@ -15,6 +15,7 @@ export const
     EVENT_SOLVE_BUTTON_CLICKED = 'solveButtonClicked',
     EVENT_PLAY_BUTTON_CLICKED = 'playButtonClicked',
     EVENT_STOP_BUTTON_CLICKED = 'stopButtonClicked',
+    EVENT_DOWNLOAD_CLICKED = 'downloadClicked',
     EVENT_KEY_PRESS = 'keyPress',
     EVENT_WINDOW_RESIZED = 'windowResized',
     EVENT_EXITS_SELECTED = 'exitsSelected';
@@ -39,6 +40,7 @@ export function buildView(model, stateMachine) {
         elPlayButton = document.getElementById('play'),
         elStopButton = document.getElementById('stop'),
         elChangeParamsButton = document.getElementById('changeParams'),
+        elDownloadButton = document.getElementById('download'),
         elInfo = document.getElementById('info'),
         elSeedInput = document.getElementById('seedInput'),
         elSizeParameterList = document.getElementById('sizeParameters'),
@@ -47,19 +49,6 @@ export function buildView(model, stateMachine) {
         elMazeAlgorithmList = document.getElementById('algorithmSelector'),
         elAlgorithmDelayList = document.getElementById('delaySelector'),
         elExitsList = document.getElementById('exitSelector');
-        // elRefreshButton = document.getElementById('refreshMaze'),
-        // elChangeMazeConfigButton = document.getElementById('changeMazeConfig'),
-        // elPlayButton = document.getElementById('play'),
-        // elApplyMaskToggle = document.getElementById('applyMaskToggle'),
-        // elMaskNotSupported = document.getElementById('maskNotSupported'),
-        // elApplyMask = document.getElementById('applyMask'),
-        // elDetails = document.getElementById('details'),
-        // elQuitButton = document.getElementById('quit'),
-        // elSolutionButton = document.getElementById('solution'),
-        // elDownloadButton = document.getElementById('downloadMaze'),
-        //
-        // imgPlayer = new Image(),
-        // imgExit = new Image(),
 
     elGoButton.onclick = () => eventTarget.trigger(EVENT_GO_BUTTON_CLICKED);
     elShowDistanceMapButton.onclick = () => eventTarget.trigger(EVENT_SHOW_MAP_BUTTON_CLICKED);
@@ -72,6 +61,7 @@ export function buildView(model, stateMachine) {
     elSolveButton.onclick = () => eventTarget.trigger(EVENT_SOLVE_BUTTON_CLICKED);
     elPlayButton.onclick = () => eventTarget.trigger(EVENT_PLAY_BUTTON_CLICKED);
     elStopButton.onclick = () => eventTarget.trigger(EVENT_STOP_BUTTON_CLICKED);
+    elDownloadButton.onclick = () => eventTarget.trigger(EVENT_DOWNLOAD_CLICKED);
 
     window.onkeydown = event => eventTarget.trigger(EVENT_KEY_PRESS, {keyCode: event.keyCode, ctrl: event.ctrlKey, shift: event.shiftKey});
 
@@ -217,6 +207,7 @@ export function buildView(model, stateMachine) {
             toggleElementVisibility(elCreateMaskButton,   [STATE_INIT].includes(state));
 
             toggleElementVisibility(elGoButton,           [STATE_INIT, STATE_DISPLAYING].includes(state));
+            toggleElementVisibility(elDownloadButton,     [STATE_DISPLAYING, STATE_DISTANCE_MAPPING].includes(state));
 
             toggleElementVisibility(elChangeParamsButton,    [STATE_DISPLAYING].includes(state));
             toggleElementVisibility(elShowDistanceMapButton, [STATE_DISPLAYING].includes(state));
