@@ -1,6 +1,5 @@
 TODO
 ----
-Create Mask -> Edit Mask if applicable
 Add arrows to solution path
 Split maze types into separate files
 TO DO comments in both projects
