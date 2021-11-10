@@ -255,6 +255,10 @@ export function buildView(model, stateMachine) {
             }
         },
 
+        updateMaskButtonCaption(maskAvailable) {
+            elCreateMaskButton.innerHTML = maskAvailable ? 'Edit Mask' : 'Create Mask';
+        },
+
         showSeedValue() {
             this.showInfo(`Seed Value:<br><b>${model.randomSeed}</b>`);
         },

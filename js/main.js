@@ -27,6 +27,11 @@ window.onload = () => {
         stateMachine = buildStateMachine(),
         view = buildView(model, stateMachine);
 
+    function isMaskAvailableForCurrentConfig() {
+        const currentMask = model.mask[getModelMaskKey()];
+        return currentMask && currentMask.length;
+    }
+
     function setupShapeParameter() {
         Object.keys(shapes).forEach(name => {
             view.addShape(name);
@@ -34,6 +39,7 @@ window.onload = () => {
 
         function onShapeSelected(shapeName) {
             view.setShape(model.shape = shapeName);
+            view.updateMaskButtonCaption(isMaskAvailableForCurrentConfig());
         }
         onShapeSelected(model.shape);
 
@@ -59,6 +65,7 @@ window.onload = () => {
         function onParameterChanged(name, value) {
             model.size[name] = value;
             view.setSizeParameter(name, value);
+            view.updateMaskButtonCaption(isMaskAvailableForCurrentConfig());
         }
         Object.entries(parameters).forEach(([paramName, paramValues]) => {
             onParameterChanged(paramName, paramValues.initial);
@@ -240,7 +247,9 @@ window.onload = () => {
     view.updateForNewState(stateMachine.state);
 
     function getModelMaskKey() {
-        return `${model.shape}-${Object.values(model.size).join('-')}`;
+        if (model.shape && model.size) {
+            return `${model.shape}-${Object.values(model.size).join('-')}`;
+        }
     }
 
     view.on(EVENT_CREATE_MASK_BUTTON_CLICKED, () => {
@@ -301,6 +310,7 @@ window.onload = () => {
                 }
             });
             showEmptyGrid(true);
+            view.updateMaskButtonCaption(isMaskAvailableForCurrentConfig());
         } catch (err) {
             alert(err);
         }
