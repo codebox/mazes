@@ -76,6 +76,7 @@ window.onload = () => {
             if (view.getValidSizeParameters().includes(data.name)) {
                 onParameterChanged(data.name, data.value);
                 showEmptyGrid(true);
+                setupAlgorithms();
             }
         });
     }
@@ -86,7 +87,7 @@ window.onload = () => {
         view.clearAlgorithms();
 
         Object.entries(algorithms).filter(([algorithmId, algorithm]) => algorithmId !== ALGORITHM_NONE).forEach(([algorithmId, algorithm]) => {
-            if (algorithm.metadata.shapes.includes(shape)) {
+            if (algorithm.metadata.shapes.includes(shape) && (algorithm.metadata.maskable || !isMaskAvailableForCurrentConfig())) {
                 view.addAlgorithm(algorithm.metadata.description, algorithmId);
             }
         });
@@ -160,7 +161,7 @@ window.onload = () => {
         maze.on(EVENT_CLICK, ifStateIs(STATE_PLAYING).then(event => {
             const currentCell = model.playState.currentCell,
                 direction = maze.getClosestDirectionForClick(currentCell, event);
-            navigate(direction, event.shift, event.alt);
+            navigate(direction, event.shift || view.isMobileLayout, event.alt || view.isMobileLayout);
             maze.render();
         }));
 
@@ -312,6 +313,7 @@ window.onload = () => {
                 }
             });
             showEmptyGrid(true);
+            setupAlgorithms();
             view.updateMaskButtonCaption(isMaskAvailableForCurrentConfig());
         } catch (err) {
             alert(err);
@@ -369,13 +371,20 @@ window.onload = () => {
     });
 
     function getNavigationInstructions() {
-        const MOUSE_INSTRUCTIONS = 'Tap/click to move through the maze',
+        const isMobile = view.isMobileLayout,
+            MOBILE_INSTRUCTIONS = 'Tap to move through the maze to the next junction',
+            MOUSE_INSTRUCTIONS = 'Click to move through the maze',
             ALT_SHIFT_INSTRUCTIONS = 'Holding down <b>SHIFT</b> will move you as far as possible in one direction<br><br>Holding down <b>ALT</b> and <b>SHIFT</b> will move you to the next junction';
+
+        if (isMobile) {
+            return MOBILE_INSTRUCTIONS;
+        }
+
         return {
-            [SHAPE_SQUARE]: `${MOUSE_INSTRUCTIONS} or use the arrow keys<br><br>${ALT_SHIFT_INSTRUCTIONS}`,
+            [SHAPE_SQUARE]:   `${MOUSE_INSTRUCTIONS} or use the arrow keys<br><br>${ALT_SHIFT_INSTRUCTIONS}`,
             [SHAPE_TRIANGLE]: `${MOUSE_INSTRUCTIONS} or use the arrow keys<br><br>${ALT_SHIFT_INSTRUCTIONS}`,
-            [SHAPE_HEXAGON]: `${MOUSE_INSTRUCTIONS}<br><br>${ALT_SHIFT_INSTRUCTIONS}`,
-            [SHAPE_CIRCLE]: `${MOUSE_INSTRUCTIONS}<br><br>${ALT_SHIFT_INSTRUCTIONS}`
+            [SHAPE_HEXAGON]:  `${MOUSE_INSTRUCTIONS}<br><br>${ALT_SHIFT_INSTRUCTIONS}`,
+            [SHAPE_CIRCLE]:   `${MOUSE_INSTRUCTIONS}<br><br>${ALT_SHIFT_INSTRUCTIONS}`
         }[model.shape];
     }
 

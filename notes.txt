@@ -3,14 +3,15 @@ TODO
 Add arrows to solution path
 Split maze types into separate files
 TO DO comments in both projects
-Check on mobile
 Show maze stats/details
 Mask shift key selection
 Solve should remove player from maze
 
 Bugs
 ----
-Some algorithms break if a mask is applied (Square, Sidewinder, mask TL corner) and others generate invalid mazes
 Circle maze breaks if center masked out
 Resizing window breaks maze for certain states
 Thin white lines between squares in distance map
+Triangle maze with bottom-top exits sometimes have no gap at exit (eg 30x13)
+SVG of hexagon solution has lines go a long way out beyond exits
+SVG of circle with distance map has center uncoloured

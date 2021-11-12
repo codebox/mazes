@@ -132,11 +132,7 @@ ul label {
         height: auto;
     }
     #mazeContainer {
-        /*position: relative;*/
-        /*width: 100%;*/
-        /*height: 0;*/
-        /*padding-bottom: 100%;*/
-
+        margin-bottom: 10px;
     }
     #maze {
         margin: 0 auto;
@@ -147,6 +143,7 @@ ul label {
     }
     #mobileTitle {
         display: block;
+        padding: 5px;
     }
     #sidebarContainer {
         flex: none;

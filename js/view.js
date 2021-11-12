@@ -48,7 +48,11 @@ export function buildView(model, stateMachine) {
         elMazeShapeList = document.getElementById('shapeSelector'),
         elMazeAlgorithmList = document.getElementById('algorithmSelector'),
         elAlgorithmDelayList = document.getElementById('delaySelector'),
-        elExitsList = document.getElementById('exitSelector');
+        elExitsList = document.getElementById('exitSelector'),
+        elMobileTitle = document.getElementById('mobileTitle'),
+
+        isMobileLayout = !! elMobileTitle.offsetParent;
+
 
     elGoButton.onclick = () => eventTarget.trigger(EVENT_GO_BUTTON_CLICKED);
     elShowDistanceMapButton.onclick = () => eventTarget.trigger(EVENT_SHOW_MAP_BUTTON_CLICKED);
@@ -66,6 +70,10 @@ export function buildView(model, stateMachine) {
     window.onkeydown = event => eventTarget.trigger(EVENT_KEY_PRESS, {keyCode: event.keyCode, alt: event.altKey, shift: event.shiftKey});
 
     function fitCanvasToContainer() {
+        if (isMobileLayout) {
+            elMazeContainer.style.height = `${elMazeContainer.clientWidth}px`;
+        }
+
         elCanvas.width = elMazeContainer.clientWidth;
         elCanvas.height = elMazeContainer.clientHeight;
     }
@@ -196,6 +204,7 @@ export function buildView(model, stateMachine) {
 
             return errors.join('\n');
         },
+        isMobileLayout,
 
         updateForNewState(state) {
             toggleElementVisibility(elMazeShapeList,      [STATE_INIT].includes(state));
