@@ -404,6 +404,8 @@ window.onload = () => {
     });
 
     view.on(EVENT_STOP_BUTTON_CLICKED, () => {
+        model.maze.clearMetadata(METADATA_PLAYER_CURRENT, METADATA_PLAYER_VISITED);
+        model.maze.render();
         stateMachine.displaying();
     });
 
