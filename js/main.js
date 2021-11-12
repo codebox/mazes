@@ -300,6 +300,10 @@ window.onload = () => {
         if (unmaskedCellCount !== countUnmasked(startCell)) {
             throw 'Your mask has cut off one or more cells so they are not reachable from the rest of the maze.';
         }
+
+        if (model.shape === SHAPE_CIRCLE && model.maze.getCellByCoordinates(0,0).metadata[METADATA_MASKED]) {
+            throw 'You can\'t mask out the centre of a circular maze';
+        }
     }
 
     view.on(EVENT_SAVE_MASK_BUTTON_CLICKED, () => {
@@ -327,12 +331,9 @@ window.onload = () => {
         model.maze.render();
     });
 
-    view.on(EVENT_WINDOW_RESIZED, ifStateIs(STATE_DISPLAYING).then(event => {
-        buildMazeUsingModel({algorithmDelay: false}).then(() => model.maze.render());
-    }));
-    view.on(EVENT_WINDOW_RESIZED, ifStateIs(STATE_INIT).then(event => {
-        showEmptyGrid(false);
-    }));
+    view.on(EVENT_WINDOW_RESIZED, () => {
+        model.maze.render();
+    });
 
     view.on(EVENT_CHANGE_PARAMS_BUTTON_CLICKED, () => {
         showEmptyGrid(true);
