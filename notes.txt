@@ -1,8 +1,3 @@
-Bugs
-----
-Thin white lines between squares in distance map
-Triangle maze with bottom-top exits sometimes have no gap at exit (eg 30x13)
-
 TODO Later
 ----------
 Add arrows to solution path
