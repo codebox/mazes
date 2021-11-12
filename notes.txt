@@ -4,7 +4,6 @@ Bugs
 Thin white lines between squares in distance map
 Triangle maze with bottom-top exits sometimes have no gap at exit (eg 30x13)
 SVG of hexagon solution has lines go a long way out beyond exits
-SVG of circle with distance map has center uncoloured
 
 TODO Later
 ----------
