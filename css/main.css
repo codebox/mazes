@@ -34,7 +34,7 @@ html, body {
     flex: 0 0 220px;
     padding: var(--narrow-margin);
     border: 1px solid var(--border-colour);
-    overflow-y: scroll;
+    overflow-y: auto;
     user-select: none;
 }
 #info{
