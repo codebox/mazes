@@ -1,4 +1,4 @@
-import {buildEventTarget} from '../../mazejs/web/js/utils.js';
+import {buildEventTarget} from './lib/utils.js';
 
 export const STATE_INIT = 'Init',
     STATE_MASKING = 'Masking',
@@ -6,6 +6,7 @@ export const STATE_INIT = 'Init',
     STATE_DISTANCE_MAPPING = 'Distance Mapping',
     STATE_RUNNING_ALGORITHM = 'Running Algorithm',
     STATE_PLAYING = 'Playing';
+
 export function buildStateMachine() {
     "use strict";
     const eventTarget = buildEventTarget('stateMachine'),

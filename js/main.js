@@ -1,9 +1,9 @@
 import {buildModel} from './model.js';
 import {buildView} from './view.js';
-import {buildMaze} from '../../mazejs/web/js/main.js';
+import {buildMaze} from './lib/main.js';
 import {buildStateMachine, STATE_INIT, STATE_DISPLAYING, STATE_PLAYING, STATE_MASKING, STATE_DISTANCE_MAPPING, STATE_RUNNING_ALGORITHM} from './stateMachine.js';
-import {shapes} from '../../mazejs/web/js/shapes.js';
-import {drawingSurfaces} from '../../mazejs/web/js/drawingSurfaces.js';
+import {shapes} from './lib/shapes.js';
+import {drawingSurfaces} from './lib/drawingSurfaces.js';
 import {
     EVENT_MAZE_SHAPE_SELECTED, EVENT_SIZE_PARAMETER_CHANGED, EVENT_ALGORITHM_SELECTED, EVENT_GO_BUTTON_CLICKED, EVENT_WINDOW_RESIZED,
     EVENT_SHOW_MAP_BUTTON_CLICKED, EVENT_CLEAR_MAP_BUTTON_CLICKED, EVENT_CREATE_MASK_BUTTON_CLICKED,
@@ -12,15 +12,15 @@ import {
     EVENT_KEY_PRESS, EVENT_DOWNLOAD_CLICKED
 } from './view.js';
 import {config} from './config.js';
-import {algorithms} from '../../mazejs/web/js/algorithms.js';
-import {buildRandom} from '../../mazejs/web/js/random.js';
+import {algorithms} from './lib/algorithms.js';
+import {buildRandom} from './lib/random.js';
 import {
     ALGORITHM_NONE, METADATA_MASKED, METADATA_END_CELL, METADATA_START_CELL, EVENT_CLICK, EXITS_NONE, EXITS_HARDEST, EXITS_HORIZONTAL, EXITS_VERTICAL,
     METADATA_PLAYER_CURRENT, METADATA_PLAYER_VISITED, METADATA_PATH, METADATA_VISITED,
     DIRECTION_NORTH, DIRECTION_SOUTH, DIRECTION_EAST, DIRECTION_WEST, DIRECTION_NORTH_WEST, DIRECTION_NORTH_EAST, DIRECTION_SOUTH_WEST, DIRECTION_SOUTH_EAST,
     DIRECTION_CLOCKWISE, DIRECTION_ANTICLOCKWISE, DIRECTION_INWARDS, DIRECTION_OUTWARDS,
     SHAPE_SQUARE, SHAPE_TRIANGLE, SHAPE_HEXAGON, SHAPE_CIRCLE
-} from '../../mazejs/web/js/constants.js';
+} from './lib/constants.js';
 
 window.onload = () => {
     "use strict";

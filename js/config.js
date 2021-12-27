@@ -1,4 +1,4 @@
-import {ALGORITHM_RECURSIVE_BACKTRACK} from '../../mazejs/web/js/constants.js';
+import {ALGORITHM_RECURSIVE_BACKTRACK} from './lib/constants.js';
 
 export const config = Object.freeze({
     shapes: {

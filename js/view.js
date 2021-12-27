@@ -1,4 +1,5 @@
-import {buildEventTarget} from '../../mazejs/web/js/utils.js';
+import {buildEventTarget} from './lib/utils.js';
+
 export const
     EVENT_MAZE_SHAPE_SELECTED = 'mazeShapeSelected',
     EVENT_SIZE_PARAMETER_CHANGED = 'mazeSizeParameterChanged',
