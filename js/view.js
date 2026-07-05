@@ -237,6 +237,9 @@ export function buildView(model, stateMachine) {
             toggleElementVisibility(elClearMaskButton, [STATE_MASKING].includes(state));
             toggleElementVisibility(elFinishRunningButton, [STATE_RUNNING_ALGORITHM].includes(state));
 
+            // while masking, stop touch drags on the canvas from scrolling the page so they can drag-select instead
+            elCanvas.style.touchAction = state === STATE_MASKING ? 'none' : '';
+
             switch(state) {
                 case STATE_INIT:
                     this.showInfo('Select parameters for your maze and then click <b>New Maze</b>');
