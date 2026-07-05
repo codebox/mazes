@@ -255,7 +255,7 @@ export function buildView(model, stateMachine) {
                     this.showInfo('The maze generation algorithm has been slowed down.<br><br>Click FINISH to skip to the end.');
                     break;
                 case STATE_MASKING:
-                    this.showInfo('Define a mask by selecting cells from the grid.<br><br>Masked cells will not be included in your maze');
+                    this.showInfo('Define a mask by selecting cells from the grid.<br><br>Click a cell to select or deselect it, or click and <b>drag</b> to select a whole area at once.<br><br>Masked cells will not be included in your maze');
                     break;
                 default:
                     console.assert(false, 'unexpected state value: ' + state);

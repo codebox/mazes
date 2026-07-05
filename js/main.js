@@ -15,8 +15,9 @@ import {config} from './config.js';
 import {algorithms} from './lib/algorithms.js';
 import {buildRandom} from './lib/random.js';
 import {
-    ALGORITHM_NONE, METADATA_MASKED, METADATA_END_CELL, METADATA_START_CELL, EVENT_CLICK, EXITS_NONE, EXITS_HARDEST, EXITS_HORIZONTAL, EXITS_VERTICAL,
-    METADATA_PLAYER_CURRENT, METADATA_PLAYER_VISITED, METADATA_PATH, METADATA_VISITED,
+    ALGORITHM_NONE, METADATA_MASKED, METADATA_END_CELL, METADATA_START_CELL, EVENT_CLICK, EVENT_MOUSE_DOWN, EVENT_MOUSE_UP, EVENT_DRAG,
+    EXITS_NONE, EXITS_HARDEST, EXITS_HORIZONTAL, EXITS_VERTICAL,
+    METADATA_PLAYER_CURRENT, METADATA_PLAYER_VISITED, METADATA_PATH, METADATA_VISITED, METADATA_RAW_COORDS,
     DIRECTION_NORTH, DIRECTION_SOUTH, DIRECTION_EAST, DIRECTION_WEST, DIRECTION_NORTH_WEST, DIRECTION_NORTH_EAST, DIRECTION_SOUTH_WEST, DIRECTION_SOUTH_EAST,
     DIRECTION_CLOCKWISE, DIRECTION_ANTICLOCKWISE, DIRECTION_INWARDS, DIRECTION_OUTWARDS,
     SHAPE_SQUARE, SHAPE_TRIANGLE, SHAPE_HEXAGON, SHAPE_CIRCLE
@@ -132,6 +133,16 @@ window.onload = () => {
     setupAlgorithms();
     showEmptyGrid(true);
 
+    function angleFromNorthClockwise([centerX, centerY], [pointX, pointY]) {
+        return (Math.atan2(pointX - centerX, centerY - pointY) + Math.PI * 2) % (Math.PI * 2);
+    }
+
+    function arcsOverlap(arc1Start, arc1Length, arc2Start, arc2Length) {
+        const TWO_PI = Math.PI * 2,
+            relativeStart = ((arc2Start - arc1Start) % TWO_PI + TWO_PI) % TWO_PI;
+        return relativeStart <= arc1Length || relativeStart + arc2Length >= TWO_PI;
+    }
+
     function buildMazeUsingModel(overrides={}) {
         if (model.maze) {
             model.maze.dispose();
@@ -154,11 +165,110 @@ window.onload = () => {
             maze.render();
         }));
 
-        maze.on(EVENT_CLICK, ifStateIs(STATE_MASKING).then(event => {
-            const cell = maze.getCellByCoordinates(event.coords);
-            cell.metadata[METADATA_MASKED] = !cell.metadata[METADATA_MASKED];
+        function setCellMasked(cell, masked) {
+            if (masked) {
+                cell.metadata[METADATA_MASKED] = true;
+            } else {
+                delete cell.metadata[METADATA_MASKED];
+            }
+        }
+
+        let maskDrag;
+        maze.on(EVENT_MOUSE_DOWN, ifStateIs(STATE_MASKING).then(event => {
+            const anchorCell = maze.getCellByCoordinates(event.coords),
+                masking = !anchorCell.metadata[METADATA_MASKED],
+                initiallyMasked = new Set();
+            maze.forEachCell(cell => {
+                if (cell.metadata[METADATA_MASKED]) {
+                    initiallyMasked.add(cell);
+                }
+            });
+            maskDrag = {anchorCoords: event.coords, anchorRawCoords: anchorCell.metadata[METADATA_RAW_COORDS], masking, initiallyMasked};
+
+            if (model.shape === SHAPE_CIRCLE) {
+                const cellsPerLayer = {};
+                maze.forEachCell(cell => {
+                    const layer = cell.coords[0];
+                    cellsPerLayer[layer] = (cellsPerLayer[layer] || 0) + 1;
+                });
+                const centerRawCoords = maze.getCellByCoordinates(0, 0).metadata[METADATA_RAW_COORDS],
+                    pointerAngle = angleFromNorthClockwise(centerRawCoords, event.rawCoords);
+                Object.assign(maskDrag, {cellsPerLayer, centerRawCoords, startAngle: pointerAngle, lastAngle: pointerAngle, sweptAngle: 0});
+            }
+
+            setCellMasked(anchorCell, masking);
             maze.render();
         }));
+
+        maze.on(EVENT_DRAG, ifStateIs(STATE_MASKING).then(event => {
+            if (!maskDrag) {
+                return;
+            }
+            let isInSelection;
+            if (maze.isSquare) {
+                // rectangle of cell coordinates - cells are selected as soon as the pointer enters them
+                const [anchorX, anchorY] = maskDrag.anchorCoords,
+                    [dragX, dragY] = event.coords,
+                    minX = Math.min(anchorX, dragX), maxX = Math.max(anchorX, dragX),
+                    minY = Math.min(anchorY, dragY), maxY = Math.max(anchorY, dragY);
+
+                isInSelection = cell => {
+                    const [x, y] = cell.coords;
+                    return x >= minX && x <= maxX && y >= minY && y <= maxY;
+                };
+
+            } else if (model.shape === SHAPE_CIRCLE) {
+                // annular sector - the layers between anchor and pointer, across the angle swept by the pointer since mouse-down
+                const TWO_PI = Math.PI * 2,
+                    pointerAngle = angleFromNorthClockwise(maskDrag.centerRawCoords, event.rawCoords);
+
+                let delta = pointerAngle - maskDrag.lastAngle;
+                if (delta > Math.PI) {
+                    delta -= TWO_PI;
+                } else if (delta < -Math.PI) {
+                    delta += TWO_PI;
+                }
+                maskDrag.lastAngle = pointerAngle;
+                maskDrag.sweptAngle = Math.max(-TWO_PI, Math.min(TWO_PI, maskDrag.sweptAngle + delta));
+
+                const arcStart = maskDrag.sweptAngle >= 0 ? maskDrag.startAngle : maskDrag.startAngle + maskDrag.sweptAngle,
+                    arcLength = Math.abs(maskDrag.sweptAngle),
+                    anchorLayer = maskDrag.anchorCoords[0],
+                    pointerLayer = event.coords[0],
+                    minLayer = Math.min(anchorLayer, pointerLayer),
+                    maxLayer = Math.max(anchorLayer, pointerLayer);
+
+                isInSelection = cell => {
+                    const [layer, index] = cell.coords;
+                    if (layer < minLayer || layer > maxLayer) {
+                        return false;
+                    }
+                    const spanLength = TWO_PI / maskDrag.cellsPerLayer[layer];
+                    return arcsOverlap(arcStart, arcLength, index * spanLength, spanLength);
+                };
+
+            } else {
+                // pixel rectangle from the anchor cell centre to the pointer - cells are selected when their centre falls inside it
+                const [anchorX, anchorY] = maskDrag.anchorRawCoords,
+                    [dragX, dragY] = event.rawCoords,
+                    minX = Math.min(anchorX, dragX), maxX = Math.max(anchorX, dragX),
+                    minY = Math.min(anchorY, dragY), maxY = Math.max(anchorY, dragY);
+
+                isInSelection = cell => {
+                    const [x, y] = cell.metadata[METADATA_RAW_COORDS];
+                    return x >= minX && x <= maxX && y >= minY && y <= maxY;
+                };
+            }
+
+            maze.forEachCell(cell => {
+                setCellMasked(cell, isInSelection(cell) ? maskDrag.masking : maskDrag.initiallyMasked.has(cell));
+            });
+            maze.render();
+        }));
+
+        maze.on(EVENT_MOUSE_UP, () => {
+            maskDrag = null;
+        });
 
         maze.on(EVENT_CLICK, ifStateIs(STATE_PLAYING).then(event => {
             const currentCell = model.playState.currentCell,
