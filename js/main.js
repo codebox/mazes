@@ -52,6 +52,12 @@ window.onload = () => {
         });
     }
 
+    function onSizeParameterChanged(name, value) {
+        model.size[name] = value;
+        view.setSizeParameter(name, value);
+        view.updateMaskButtonCaption(isMaskAvailableForCurrentConfig());
+    }
+
     function setupSizeParameters() {
         const shape = model.shape,
             parameters = config.shapes[shape].parameters;
@@ -63,22 +69,21 @@ window.onload = () => {
             view.addSizeParameter(paramName, paramValues.min, paramValues.max);
         });
 
-        function onParameterChanged(name, value) {
-            model.size[name] = value;
-            view.setSizeParameter(name, value);
-            view.updateMaskButtonCaption(isMaskAvailableForCurrentConfig());
-        }
         Object.entries(parameters).forEach(([paramName, paramValues]) => {
-            onParameterChanged(paramName, paramValues.initial);
+            onSizeParameterChanged(paramName, paramValues.initial);
         });
+    }
 
-        view.on(EVENT_SIZE_PARAMETER_CHANGED, data => {
-            if (view.getValidSizeParameters().includes(data.name)) {
-                onParameterChanged(data.name, data.value);
-                showEmptyGrid(true);
-                setupAlgorithms();
-            }
-        });
+    view.on(EVENT_SIZE_PARAMETER_CHANGED, data => {
+        if (view.getValidSizeParameters().includes(data.name)) {
+            onSizeParameterChanged(data.name, data.value);
+            showEmptyGrid(true);
+            setupAlgorithms();
+        }
+    });
+
+    function onAlgorithmChanged(algorithmId) {
+        view.setAlgorithm(model.algorithm = algorithmId);
     }
 
     function setupAlgorithms() {
@@ -92,13 +97,10 @@ window.onload = () => {
             }
         });
 
-        function onAlgorithmChanged(algorithmId) {
-            view.setAlgorithm(model.algorithm = algorithmId);
-        }
         onAlgorithmChanged(config.shapes[shape].defaultAlgorithm);
-
-        view.on(EVENT_ALGORITHM_SELECTED, onAlgorithmChanged);
     }
+
+    view.on(EVENT_ALGORITHM_SELECTED, onAlgorithmChanged);
 
     function setupAlgorithmDelay() {
         view.addAlgorithmDelay('Instant Mazes', 0);
